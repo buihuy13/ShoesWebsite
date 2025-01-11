@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+using Newtonsoft.Json;
 using Utilities;
 using WDProject.Areas.Identity.Models.Account;
 using WDProject.Data;
 using WDProject.Models.Identity;
+using WDProject.Services;
 
 namespace WDProject.Areas.Identity.Controllers
 {
@@ -15,11 +18,13 @@ namespace WDProject.Areas.Identity.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private ILogger<AccountController> _logger;
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, ILogger<AccountController> logger)
+        private readonly TokenService _tokenService;
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, ILogger<AccountController> logger,TokenService tokenService)
         {
-            _userManager = userManager;
+            _userManager = userManager;         
             _signInManager = signInManager;
             _logger = logger;
+            _tokenService = tokenService;
         }
 
         [HttpPost]
@@ -32,9 +37,10 @@ namespace WDProject.Areas.Identity.Controllers
             if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(model.UserNameOrEmail, model.Password, model.RememberMe, lockoutOnFailure: false);
+                var user = await _userManager.FindByNameAsync(model.UserNameOrEmail);
                 if ((!result.Succeeded) && AppUtilities.IsValidEmail(model.UserNameOrEmail))
                 {
-                    var user = await _userManager.FindByEmailAsync(model.UserNameOrEmail);
+                    user = await _userManager.FindByEmailAsync(model.UserNameOrEmail);
                     if (user != null)
                     {
                         result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: true);
@@ -43,13 +49,17 @@ namespace WDProject.Areas.Identity.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("Đăng nhập thành công");
-                    return LocalRedirect(returnUrl);
+                    var JwtTokens = _tokenService.GenerateTokens(user);
+                    return Ok(new { 
+                        message = "Đăng nhập thành công",
+                        tokens = JwtTokens
+                    });
                 }
                 else
                 {
                     _logger.LogWarning("Đăng nhập thất bại");
                     ModelState.AddModelError("", "Lỗi đăng nhập");
-                    return Unauthorized("Đăng nhập không thành công");
+                    return Unauthorized(new { message = "Đăng nhập không thành công" });
                 }
             }
             else
@@ -61,16 +71,22 @@ namespace WDProject.Areas.Identity.Controllers
                     ModelState.AddModelError(string.Empty, error.ErrorMessage);
                 }
             }
-            return Unauthorized("Sai định dạng");
+            return Unauthorized(new { message = "Đăng nhập không thành công" });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOut()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user!= null)
+            {
+                user.RefreshToken = null;
+                user.RefreshTokenExpiryTime = DateTime.UtcNow;
+            }
             await _signInManager.SignOutAsync();
             _logger.LogInformation("Đăng xuất thành công");
-            return Redirect("/Account/Login");
+            return Ok(new { message = "Đăng xuất thành công" });
         }
 
         [HttpPost]
@@ -85,12 +101,12 @@ namespace WDProject.Areas.Identity.Controllers
                 if (model.Password != model.ConfirmPassword)
                 {
                     ModelState.AddModelError("", "Mật khẩu xác nhận không trùng nhau");
-                    return BadRequest("Mật khẩu và mật khẩu xác nhận không trùng nhau");
+                    return BadRequest(new { message = "Mật khẩu và mật khẩu xác nhận không trùng nhau" });
                 }
                 if (AppUtilities.IsValidEmail(model.Email))
                 {
                     ModelState.AddModelError("", "Email sai định dạng");
-                    return BadRequest("Sai định dạng Email");
+                    return BadRequest(new { message = "Sai định dạng Email" });
                 }
                 var user = new User() { Email = model.Email, UserName = model.UserName };
                 var result = await _userManager.CreateAsync(user,model.Password);
@@ -99,12 +115,12 @@ namespace WDProject.Areas.Identity.Controllers
                     await _userManager.AddToRoleAsync(user, RoleName.user);
                     _logger.LogInformation("Tạo tài khoản thành công");
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
+                    return Ok(new { message = "Đăng ký thành công" });
                 }
                 else
                 {
                     ModelState.AddModelError("", result.ToString());
-                    return Conflict("Đã tồn tại tài khoản này");
+                    return Conflict(new { message = "Đã tồn tại tài khoản này" });
                 }
             }
             else
@@ -116,7 +132,7 @@ namespace WDProject.Areas.Identity.Controllers
                     ModelState.AddModelError(string.Empty, error.ErrorMessage);
                 }
             }
-            return BadRequest("Sai định dạng");
+            return BadRequest(new { message = "Lỗi đăng ký" });
         }
 
         [HttpGet]
@@ -124,12 +140,12 @@ namespace WDProject.Areas.Identity.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var model = new EditModel()
             {
@@ -137,7 +153,7 @@ namespace WDProject.Areas.Identity.Controllers
                 Email = user.Email,
                 HomeAddress = user.HomeAddress
             };
-            return Json(model);
+            return Ok(new { data = JsonConvert.SerializeObject(model) });
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -145,7 +161,7 @@ namespace WDProject.Areas.Identity.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             if (!ModelState.IsValid)
             {
@@ -155,12 +171,12 @@ namespace WDProject.Areas.Identity.Controllers
                     _logger.LogError(error.ErrorMessage);
                     ModelState.AddModelError(string.Empty, error.ErrorMessage);
                 }
-                return BadRequest(model);
+                return BadRequest(new { message = "Sai định dạng" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             try
             {
@@ -168,13 +184,13 @@ namespace WDProject.Areas.Identity.Controllers
                 user.UserName = model.UserName;
                 user.HomeAddress = model.HomeAddress;
                 await _userManager.UpdateAsync(user);
-                return Redirect("/HomePage");
+                return Ok(new { message = "Chỉnh sửa thành công" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return BadRequest("Lỗi khi chỉnh sửa người dùng");
+                return BadRequest(new { message = "Lỗi khi chỉnh sửa người dùng" });
             }
         }
 
@@ -184,15 +200,15 @@ namespace WDProject.Areas.Identity.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
-            return Json(user);
+            return Ok(new { data = JsonConvert.SerializeObject(user) });
         }
 
         [HttpGet]
@@ -201,15 +217,15 @@ namespace WDProject.Areas.Identity.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
-            return Json(user);
+            return Ok(new { data = JsonConvert.SerializeObject(user) });
         }
 
         [HttpPost]
@@ -219,23 +235,23 @@ namespace WDProject.Areas.Identity.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new {message = "Không tìm thấy user"});
             }
             try
             {
                 await _userManager.DeleteAsync(user);
-                return Redirect("/Account/Register");
+                return Ok(new { message = "Xóa thành công" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return BadRequest("Lỗi khi xóa người dùng");
+                return BadRequest(new { message = "Lỗi khi xóa" });
             }
         }
     }

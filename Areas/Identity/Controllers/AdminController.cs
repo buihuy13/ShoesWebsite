@@ -73,16 +73,17 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                 {
                     UserName = model.UserName,
                     Email = model.Email,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    Total_Purchase = 0
                 };
                 await _userManager.CreateAsync(user,model.Password);
                 await _userManager.AddToRoleAsync(user, RoleName.user);
-                return RedirectToAction("Index");
+                return Ok(new { message = "Tạo người dùng thành công" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return View(model);
+                return BadRequest(new { message = "Có lỗi khi tạo người dùng" });
             }
         }
 
@@ -92,15 +93,15 @@ namespace ShoesWebsite.Areas.Identity.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
-            return Ok(user);
+            return Ok(new { data = user });
         }
 
         [HttpGet]
@@ -109,15 +110,15 @@ namespace ShoesWebsite.Areas.Identity.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
-            return Ok(user);
+            return Ok(new { data = user });
         }
 
         [HttpPost]
@@ -127,23 +128,23 @@ namespace ShoesWebsite.Areas.Identity.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound("Không tìm thấy user");
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             try
             {
                 await _userManager.DeleteAsync(user);
-                return Redirect("/Admin/Index");
+                return Ok(new { message = "Xóa người dùng thành công" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return BadRequest("Lỗi khi xóa người dùng");
+                return BadRequest(new { message = "Lỗi khi xóa người dùng" });
             }
         }
     }

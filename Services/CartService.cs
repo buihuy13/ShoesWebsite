@@ -1,7 +1,9 @@
 ﻿
 using Newtonsoft.Json;
+using WDProject.Models.CartModel;
+using WDProject.Models.Product;
 
-namespace WDProject.Helpers
+namespace WDProject.Services
 {
     public class CartService
     {
@@ -17,15 +19,15 @@ namespace WDProject.Helpers
         }
 
         //Lấy object từ trong session
-        public Object GetItems()
+        public List<CartItem> GetItems()
         {
             var session = _context.Session;
             string jsonCart = session.GetString(CARTKEY);
             if (string.IsNullOrEmpty(jsonCart))
             {
-                return JsonConvert.DeserializeObject<Object>(jsonCart);
+                return JsonConvert.DeserializeObject<List<CartItem>>(jsonCart);
             }
-            return new object();
+            return new List<CartItem>();
         }
         //Xóa thông tin session
         public void ClearCart()
@@ -34,7 +36,7 @@ namespace WDProject.Helpers
             session.Remove(CARTKEY);
         }
         //Lưu object vào trong session
-        public void SaveCart(Object items)
+        public void SaveCart(List<CartItem> items)
         {
             var session = _context.Session;
             session.SetString(CARTKEY, JsonConvert.SerializeObject(items));

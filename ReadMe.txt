@@ -48,7 +48,11 @@ Post (DeleteConfirmed): Xóa người dùng đang đăng nhập hiện tại
 
 
 x, Các phần thêm
-- Session: Hỗ trợ trang bán hàng (Lưu lại những đơn hàng đang mua nhưng bị thoát ra) **CHƯA XONG (CHƯA XÁC ĐỊNH ĐƯỢC OBJECT)
+- Session: Hỗ trợ trang bán hàng (Lưu lại những đơn hàng đang mua nhưng bị thoát ra) 
  /Helpers/CartService
 
-- FakeData: Fake user, admin và thiết lập các role (Init Data)
+- FakeData: Fake user, admin và thiết lập các role (Init Data) 
+
+- Đã làm JWT (đã config trong program.cs và tạo ra service cho jwt token ở trong Services/TokenService) 
+(Đã làm cho login, logout, chỉ còn forgot password)
+

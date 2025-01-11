@@ -43,7 +43,8 @@ namespace WDProject.Helpers
                 var adminUser = new WDProject.Models.Identity.User()
                 {
                     UserName = "admin",
-                    Email = "admin123@gmail.com"
+                    Email = "admin123@gmail.com",
+                    Total_Purchase = 0
                 };
                 var adminResult = await userManager.CreateAsync(adminUser, "admin123");
                 await userManager.AddToRoleAsync(adminUser, RoleName.admin);
@@ -57,7 +58,8 @@ namespace WDProject.Helpers
                 var user = new WDProject.Models.Identity.User()
                 {
                     UserName = "user",
-                    Email = "user123@gmail.com"
+                    Email = "user123@gmail.com",
+                    Total_Purchase = 0
                 };
                 var userResult = await userManager.CreateAsync(user, "user123");
                 await userManager.AddToRoleAsync(user, RoleName.user);
