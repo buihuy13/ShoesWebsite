@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Utilities;
@@ -70,21 +71,39 @@ namespace WDProject.Areas.Identity.Controllers
             });
         }
 
-        [HttpGet("/api/accesstoken")]
-        public async Task<IActionResult> RefreshToken([FromBody]string refreshToken)
+        [HttpPost("/api/accesstoken")]
+        public async Task<IActionResult> RefreshToken([FromBody]RefreshTokenRequest request)
         {
-            var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshToken);
-            if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+            try
             {
-                return Unauthorized(new { message = "Không cung cấp access token mới" });
+                var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == request.RefreshToken);
+
+                if (user == null)
+                {
+                    return Unauthorized(new { message = "Invalid refresh token" });
+                }
+
+                if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                {
+                    return Unauthorized(new { message = "Refresh token expired" });
+                }
+
+                var tokens = await _tokenService.GenerateTokens(user);
+                await _userManager.UpdateAsync(user);
+
+                return Ok(new
+                {
+                    accessToken = tokens.AccessToken,
+                    refreshToken = tokens.RefreshToken
+                });
             }
-            var tokens = await _tokenService.GenerateTokens(user);
-            return Ok(new
+            catch (Exception ex)
             {
-                accesstoken = tokens.AccessToken,
-                refreshtoken = tokens.RefreshToken,
-            });
+                _logger.LogError(ex, "Error refreshing token");
+                return BadRequest(new { message = "Không thể trả về tokens mới" });
+            }
         }
+
         [HttpPost("/auth/logout/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOut(string? id)
@@ -142,7 +161,7 @@ namespace WDProject.Areas.Identity.Controllers
             return BadRequest(new { message = "Lỗi đăng ký" });
         }
 
-        [HttpPost("/auth/edit")]
+        [HttpPut("/users/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit([FromBody]EditModel model, string? id)
         {
@@ -181,7 +200,7 @@ namespace WDProject.Areas.Identity.Controllers
             }
         }
 
-        [HttpGet("/auth/getuser/{id}")]
+        [HttpGet("/users/{id}")]
         public async Task<IActionResult> Details(string? id)
         {
             if (string.IsNullOrEmpty(id))
@@ -198,7 +217,7 @@ namespace WDProject.Areas.Identity.Controllers
             return Ok(new { data = JsonConvert.SerializeObject(user) });
         }
 
-        [HttpPost("/auth/delete/{id}")]
+        [HttpDelete("/users/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string? id)
         {

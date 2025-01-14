@@ -14,7 +14,7 @@ namespace WDProject.Services
     {
         private readonly IConfiguration _configuration;
         private readonly MyDbContext _context;
-        private readonly UserManager<User> _userManager;    
+        private readonly UserManager<User> _userManager;   
 
         public TokenService(IConfiguration configuration, MyDbContext context,UserManager<User> userManager)
         {
@@ -32,7 +32,7 @@ namespace WDProject.Services
             //Lưu thông tin về refresh token và thời gian hết hạn của nó vào db
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            await _context.SaveChangesAsync();
+            await _userManager.UpdateAsync(user);
 
             return new TokenResponse()
             {
