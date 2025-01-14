@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Security.Claims;
+using System.Text.Json.Serialization;
 using Utilities;
 using WDProject.Areas.Identity.Models.Account;
 using WDProject.Data;
@@ -28,12 +30,14 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpPost("/auth/login")]
-        public async Task<IActionResult> Login(LoginModel model, string returnUrl = null)
+        public async Task<IActionResult> Login([FromBody]LoginModel model, string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ViewData["ReturnUrl"] = returnUrl;
             if (!ModelState.IsValid)
             {
+                _logger.LogInformation("Received data: {Data}", model.UserNameOrEmail);
+
                 var errors = ModelState.Values
                             .SelectMany(e => e.Errors)
                             .Select(e => e.ErrorMessage)
@@ -66,11 +70,11 @@ namespace WDProject.Areas.Identity.Controllers
             });
         }
 
-        [HttpPost("/auth/logout")]
+        [HttpPost("/auth/logout/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LogOut()
+        public async Task<IActionResult> LogOut(string? id)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await _userManager.FindByIdAsync(id);
             if (user!= null)
             {
                 user.RefreshToken = null;
@@ -81,7 +85,7 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpPost("/auth/register")]
-        public async Task<IActionResult> Register(RegisterModel model, string returnUrl = null)
+        public async Task<IActionResult> Register([FromBody]RegisterModel model, string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ViewData["ReturnUrl"] = returnUrl;
@@ -123,29 +127,9 @@ namespace WDProject.Areas.Identity.Controllers
             return BadRequest(new { message = "Lỗi đăng ký" });
         }
 
-        [HttpGet("/auth/getuser/{id}")]
-        public async Task<IActionResult> Edit(string? id)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            var model = new EditModel()
-            {
-                UserName = user.UserName,
-                Email = user.Email,
-                HomeAddress = user.HomeAddress
-            };
-            return Ok(new { data = JsonConvert.SerializeObject(model) });
-        }
         [HttpPost("/auth/edit")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(EditModel model, string? id)
+        public async Task<IActionResult> Edit([FromBody]EditModel model, string? id)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -182,7 +166,7 @@ namespace WDProject.Areas.Identity.Controllers
             }
         }
 
-        [HttpGet("/auth/details/{id}")]
+        [HttpGet("/auth/getuser/{id}")]
         public async Task<IActionResult> Details(string? id)
         {
             if (string.IsNullOrEmpty(id))

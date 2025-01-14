@@ -56,7 +56,7 @@ namespace ShoesWebsite.Areas.Identity.Controllers
 
         [HttpPost("/admin/create")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateModel model)
+        public async Task<IActionResult> Create([FromBody]CreateModel model)
         {
             if (!ModelState.IsValid)
             {
