@@ -121,6 +121,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCors();
+
 app.UseSession();
 
 app.UseAuthentication();
