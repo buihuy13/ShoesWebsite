@@ -13,8 +13,9 @@ namespace WDProject.Models.Product
 
         [Required]
         public string Description { get; set; } 
-        public List<ProductDetails> Details { get; set; }
+        public List<ProductDetails>? Details { get; set; }
         public List<ProductsCategories>? ProductsCategories { get; set; }
+        public List<OrderDetails>? OrderDetails { get; set; }
         public string? ImageUrl { get; set; }
     }
 }

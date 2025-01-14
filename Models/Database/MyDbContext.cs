@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using WDProject.Models.Identity;
 using WDProject.Models.Product;
 
 namespace WDProject.Models.Database
@@ -30,6 +31,50 @@ namespace WDProject.Models.Database
                     entityType.SetTableName(tableName.Substring(6));
                 }
             }
+
+            //Đảm bảo khi 1 product bị xóa thì productcategories có tham chiếu product đó cũng bị xóa
+            builder.Entity<Products>()
+                   .HasMany(p => p.ProductsCategories)
+                   .WithOne(pc => pc.Product)
+                   .HasForeignKey(pc => pc.ProductId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            //Đảm bảo khi xóa 1 categories thì productcategories có tham chiếu categories đó cũng bị xóa
+            builder.Entity<Categories>()
+                   .HasMany(c => c.ProductsCategories)
+                   .WithOne(pc => pc.Category)
+                   .HasForeignKey(pc => pc.CategoryId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            //Đảm bảo khi xóa 1 products thì productdetails có tham chiếu products đó cũng bị xóa
+            builder.Entity<Products>()
+                   .HasMany(p => p.Details)
+                   .WithOne(pd => pd.Product)
+                   .HasForeignKey(pd => pd.ProductId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            //Đảm bảo khi xóa 1 products thì orderdetails có tham chiếu products đó cũng bị xóa
+            builder.Entity<Products>()
+                   .HasMany(p => p.OrderDetails)
+                   .WithOne(pd => pd.Product)
+                   .HasForeignKey(pd => pd.ProductId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+
+            //Đảm bảo khi xóa 1 user thì orders có tham chiếu user đó cũng bị xóa
+            builder.Entity<User>()
+                   .HasMany(u => u.Orders)
+                   .WithOne(uo => uo.User)
+                   .HasForeignKey(uo => uo.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            //Đảm bảo khi xóa 1 order thì orderDetails có tham chiếu order đó cũng bị xóa
+            builder.Entity<Order>()
+                   .HasMany(o => o.OrderDetails)
+                   .WithOne(od => od.Order)
+                   .HasForeignKey(od => od.OrderId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

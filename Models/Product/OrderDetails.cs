@@ -13,7 +13,7 @@ namespace WDProject.Models.Product
 
         [Required]
         [ForeignKey("OrderId")]
-        public int Order {  get; set; }
+        public Order Order {  get; set; }
 
         [Required]
         public int ProductId { get; set; }

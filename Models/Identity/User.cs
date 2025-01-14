@@ -12,7 +12,7 @@ namespace WDProject.Models.Identity
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
         [Required]
-        public Decimal Total_Purchase {  get; set; }
+        public Decimal TotalPurchase {  get; set; }
         public List<Order>? Orders { get; set; }
     }
 }

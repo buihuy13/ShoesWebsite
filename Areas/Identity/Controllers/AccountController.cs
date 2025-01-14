@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Utilities;
 using WDProject.Areas.Identity.Models.Account;
@@ -12,7 +13,6 @@ using WDProject.Services;
 namespace WDProject.Areas.Identity.Controllers
 {
     [Area("Identity")]
-    [Route("/Account/[action]")]
     public class AccountController : Controller
     {
         private readonly UserManager<User> _userManager;
@@ -27,54 +27,46 @@ namespace WDProject.Areas.Identity.Controllers
             _tokenService = tokenService;
         }
 
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
+        [HttpPost("/auth/login")]
         public async Task<IActionResult> Login(LoginModel model, string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ViewData["ReturnUrl"] = returnUrl;
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.UserNameOrEmail, model.Password, model.RememberMe, lockoutOnFailure: false);
-                var user = await _userManager.FindByNameAsync(model.UserNameOrEmail);
-                if ((!result.Succeeded) && AppUtilities.IsValidEmail(model.UserNameOrEmail))
+                var errors = ModelState.Values
+                            .SelectMany(e => e.Errors)
+                            .Select(e => e.ErrorMessage)
+                            .ToList();
+                foreach(var error in errors)
                 {
-                    user = await _userManager.FindByEmailAsync(model.UserNameOrEmail);
-                    if (user != null)
-                    {
-                        result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: true);
-                    }
+                    _logger.LogInformation(error);
                 }
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("Đăng nhập thành công");
-                    var JwtTokens = _tokenService.GenerateTokens(user);
-                    return Ok(new { 
-                        message = "Đăng nhập thành công",
-                        tokens = JwtTokens
-                    });
-                }
-                else
-                {
-                    _logger.LogWarning("Đăng nhập thất bại");
-                    ModelState.AddModelError("", "Lỗi đăng nhập");
-                    return Unauthorized(new { message = "Đăng nhập không thành công" });
-                }
+                return BadRequest(new { message = "Dữ liệu không hợp lệ", error = errors });
             }
-            else
+
+            // Tìm user bằng username hoặc email
+            var user = await _userManager.FindByNameAsync(model.UserNameOrEmail)
+                       ?? await _userManager.FindByEmailAsync(model.UserNameOrEmail);
+
+            if (user == null || !(await _userManager.CheckPasswordAsync(user, model.Password)))
             {
-                var errors = ModelState.Values.SelectMany(e => e.Errors);
-                foreach (var error in errors)
-                {
-                    _logger.LogError(error.ErrorMessage);
-                    ModelState.AddModelError(string.Empty, error.ErrorMessage);
-                }
+                return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không đúng" });
             }
-            return Unauthorized(new { message = "Đăng nhập không thành công" });
+
+            // Tạo JWT
+            var token = await _tokenService.GenerateTokens(user);
+
+            return Ok(new
+            {
+                message = "Đăng nhập thành công",
+                accesstoken = token.AccessToken,
+                refreshtoken = token.RefreshToken,
+                rememberme = model.RememberMe
+            });
         }
 
-        [HttpPost]
+        [HttpPost("/auth/logout")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOut()
         {
@@ -84,14 +76,11 @@ namespace WDProject.Areas.Identity.Controllers
                 user.RefreshToken = null;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow;
             }
-            await _signInManager.SignOutAsync();
             _logger.LogInformation("Đăng xuất thành công");
             return Ok(new { message = "Đăng xuất thành công" });
         }
 
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
+        [HttpPost("/auth/register")]
         public async Task<IActionResult> Register(RegisterModel model, string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
@@ -103,18 +92,17 @@ namespace WDProject.Areas.Identity.Controllers
                     ModelState.AddModelError("", "Mật khẩu xác nhận không trùng nhau");
                     return BadRequest(new { message = "Mật khẩu và mật khẩu xác nhận không trùng nhau" });
                 }
-                if (AppUtilities.IsValidEmail(model.Email))
+                if (!AppUtilities.IsValidEmail(model.Email))
                 {
                     ModelState.AddModelError("", "Email sai định dạng");
                     return BadRequest(new { message = "Sai định dạng Email" });
                 }
-                var user = new User() { Email = model.Email, UserName = model.UserName };
+                var user = new User() { Email = model.Email, UserName = model.UserName, TotalPurchase = 0 };
                 var result = await _userManager.CreateAsync(user,model.Password);
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, RoleName.user);
                     _logger.LogInformation("Tạo tài khoản thành công");
-                    await _signInManager.SignInAsync(user, isPersistent: false);
                     return Ok(new { message = "Đăng ký thành công" });
                 }
                 else
@@ -135,7 +123,7 @@ namespace WDProject.Areas.Identity.Controllers
             return BadRequest(new { message = "Lỗi đăng ký" });
         }
 
-        [HttpGet]
+        [HttpGet("/auth/getuser/{id}")]
         public async Task<IActionResult> Edit(string? id)
         {
             if (string.IsNullOrEmpty(id))
@@ -155,7 +143,7 @@ namespace WDProject.Areas.Identity.Controllers
             };
             return Ok(new { data = JsonConvert.SerializeObject(model) });
         }
-        [HttpPost]
+        [HttpPost("/auth/edit")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(EditModel model, string? id)
         {
@@ -194,7 +182,7 @@ namespace WDProject.Areas.Identity.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("/auth/details/{id}")]
         public async Task<IActionResult> Details(string? id)
         {
             if (string.IsNullOrEmpty(id))
@@ -211,24 +199,7 @@ namespace WDProject.Areas.Identity.Controllers
             return Ok(new { data = JsonConvert.SerializeObject(user) });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Delete(string? id)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            return Ok(new { data = JsonConvert.SerializeObject(user) });
-        }
-
-        [HttpPost]
+        [HttpPost("/auth/delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string? id)
         {

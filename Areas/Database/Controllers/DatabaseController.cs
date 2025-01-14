@@ -1,25 +1,35 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using WDProject.Data;
 using WDProject.Models.Database;
 using WDProject.Models.Identity;
-
-namespace WDProject.Helpers
+namespace ShoesWebsite.Areas.Database.Controllers
 {
-    public class FakeData
+    [Area("Database")]
+    [Route("/Database/[action]")]
+    [Authorize(Roles = RoleName.admin)] 
+    public class DatabaseController : Controller
     {
         private readonly UserManager<User> userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<DatabaseController> _logger;
         private readonly MyDbContext _context;
-        private readonly ILogger<FakeData> _logger;
 
-        public FakeData(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, MyDbContext context, ILogger<FakeData> logger)
+        public DatabaseController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ILogger<DatabaseController> logger, MyDbContext context)
         {
             this.userManager = userManager;
             _roleManager = roleManager;
-            _context = context;
             _logger = logger;
+            _context = context;
         }
-        public async Task FakeDataFunction()
+        public IActionResult Index()
+        {
+            return View();
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FakeUser()
         {
             var roles = typeof(RoleName).GetFields().ToList();
             foreach (var role in roles)
@@ -32,7 +42,7 @@ namespace WDProject.Helpers
                     if (!result.Succeeded)
                     {
                         _logger.LogWarning("Lỗi khi tạo role");
-                        return;
+                        return RedirectToAction("View");
                     }
                 }
             }
@@ -68,7 +78,7 @@ namespace WDProject.Helpers
                     _logger.LogWarning("Tạo user thất bại");
                 }
             }
-            return;
+            return RedirectToAction("View");
         }
     }
 }

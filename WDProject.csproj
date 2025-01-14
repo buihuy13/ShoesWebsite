@@ -12,6 +12,9 @@
     <Folder Include="Areas\Identity\Views\Account\JS\" />
     <Folder Include="Areas\Identity\Views\Admin\CSS\" />
     <Folder Include="Areas\Identity\Views\Admin\JS\" />
+    <Folder Include="Areas\Products\Data\" />
+    <Folder Include="Areas\Products\Views\" />
+    <Folder Include="Helpers\" />
   </ItemGroup>
 
   <ItemGroup>
