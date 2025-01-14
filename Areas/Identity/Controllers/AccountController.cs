@@ -21,16 +21,16 @@ namespace WDProject.Areas.Identity.Controllers
         private readonly SignInManager<User> _signInManager;
         private ILogger<AccountController> _logger;
         private readonly TokenService _tokenService;
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, ILogger<AccountController> logger,TokenService tokenService)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, ILogger<AccountController> logger, TokenService tokenService)
         {
-            _userManager = userManager;         
+            _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             _tokenService = tokenService;
         }
 
         [HttpPost("/auth/login")]
-        public async Task<IActionResult> Login([FromBody]LoginModel model, string returnUrl = null)
+        public async Task<IActionResult> Login([FromBody] LoginModel model, string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ViewData["ReturnUrl"] = returnUrl;
@@ -42,7 +42,7 @@ namespace WDProject.Areas.Identity.Controllers
                             .SelectMany(e => e.Errors)
                             .Select(e => e.ErrorMessage)
                             .ToList();
-                foreach(var error in errors)
+                foreach (var error in errors)
                 {
                     _logger.LogInformation(error);
                 }
@@ -70,6 +70,21 @@ namespace WDProject.Areas.Identity.Controllers
             });
         }
 
+        [HttpGet("/api/accesstoken")]
+        public async Task<IActionResult> RefreshToken([FromBody]string refreshToken)
+        {
+            var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshToken);
+            if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+            {
+                return Unauthorized(new { message = "Không cung cấp access token mới" });
+            }
+            var tokens = await _tokenService.GenerateTokens(user);
+            return Ok(new
+            {
+                accesstoken = tokens.AccessToken,
+                refreshtoken = tokens.RefreshToken,
+            });
+        }
         [HttpPost("/auth/logout/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOut(string? id)
