@@ -10,12 +10,10 @@ namespace WDProject.Models.Product
         public string Name { get; set; }
         [Required]
         public Decimal Price { get; set; }
-
-        [Required]
-        public string Description { get; set; } 
+        public string? Description { get; set; } 
+        public string? Brand { get; set; }
         public List<ProductDetails>? Details { get; set; }
         public List<ProductsCategories>? ProductsCategories { get; set; }
-        public List<OrderDetails>? OrderDetails { get; set; }
-        public string? ImageUrl { get; set; }
+        public List<ProductImage>? Images { get; set; }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 using WDProject.Models.Database;
 using WDProject.Models.Identity;
 using WDProject.Services;
@@ -105,8 +107,12 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddTransient<CartService>();
 
 //Đăng ký cho dịch vụ sử dụng jwt Token
-builder.Services.AddScoped<TokenService>();
+builder.Services.AddTransient<TokenService>();
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options => {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -119,6 +125,14 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions()
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")
+    ),
+    RequestPath = "/contents"
+});
 
 app.UseRouting();
 

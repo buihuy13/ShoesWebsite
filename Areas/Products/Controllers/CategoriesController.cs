@@ -1,22 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using WDProject.Areas.Identity.Models.Admin;
-using WDProject.Areas.Products.Models.Category;
+using WDProject.Areas.Product.Models.Category;
+using WDProject.Data;
 using WDProject.Models.Database;
 using WDProject.Models.Product;
 
-namespace WDProject.Areas.Products.Controllers
+namespace WDProject.Areas.Product.Controllers
 {
+    [Area("Categories")]
+    [Authorize(Roles = RoleName.admin)]
     public class CategoriesController : Controller
     {
         private readonly MyDbContext _dbContext;
-        private readonly ILogger<CategoriesController> _logger; 
-        public CategoriesController(MyDbContext dbContext,ILogger<CategoriesController> logger)
+        private readonly ILogger<CategoriesController> _logger;
+        public CategoriesController(MyDbContext dbContext, ILogger<CategoriesController> logger)
         {
             _dbContext = dbContext;
             _logger = logger;
         }
-        [HttpGet("/categories/getcategories")]
+        [HttpGet("/categories")]
         public IActionResult Index([FromQuery(Name = "p")] int currentPage)
         {
             try
@@ -25,8 +28,8 @@ namespace WDProject.Areas.Products.Controllers
                 model.currentPage = currentPage;
                 var categoryList = _dbContext.Categories.ToList();
 
-                model.totalUsers = categoryList.Count;
-                model.countPages = (int)Math.Ceiling((double)model.totalUsers / model.ITEMS_PER_PAGE);
+                model.totalCategories = categoryList.Count;
+                model.countPages = (int)Math.Ceiling((double)model.totalCategories / model.ITEMS_PER_PAGE);
 
                 if (model.currentPage < 1)
                     model.currentPage = 1;
@@ -36,17 +39,25 @@ namespace WDProject.Areas.Products.Controllers
                 var qr = categoryList.Skip((model.currentPage - 1) * model.ITEMS_PER_PAGE).Take(model.ITEMS_PER_PAGE);
                 model.Categories = qr.ToList();
 
-                return Ok(new { data = JsonConvert.SerializeObject(model.Categories) });
+                var response = new
+                {
+                    data = model.Categories
+                };
+
+                return Ok(new
+                {
+                    data = model.Categories
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogInformation(ex.Message);
-                return BadRequest("Không tạo ra list các categories được");
+                return BadRequest(new { message = "Không tạo ra list các categories được" });
             }
         }
 
         [HttpPost("/categories/new")]
-        public async Task<IActionResult> Create([FromBody] Models.Category.CreateModel model)
+        public async Task<IActionResult> Create([FromBody] CreateModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -80,18 +91,18 @@ namespace WDProject.Areas.Products.Controllers
             var category = _dbContext.Categories.ToList().FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
-                return NotFound(new { message = "Chưa truyền id vào" });
+                return NotFound(new { message = "Không tìm tháy category với id đó" });
             }
             try
             {
                 _dbContext.Categories.Remove(category);
                 await _dbContext.SaveChangesAsync();
-                return Ok(new {message = "Xóa category thành công"});
+                return Ok(new { message = "Xóa category thành công" });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return BadRequest(new {message = ex.Message});  
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -101,18 +112,21 @@ namespace WDProject.Areas.Products.Controllers
             var category = _dbContext.Categories.ToList().FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
-                return NotFound(new { message = "Chưa truyền id vào" });
+                return NotFound(new { message = "Không tìm tháy category với id đó" });
             }
-            return Ok(new {data = JsonConvert.SerializeObject(category)});  
+            return Ok(new
+            {
+                data = category
+            });
         }
 
         [HttpPut("/categories/{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Models.Category.CreateModel model)
+        public async Task<IActionResult> Update(int id, [FromBody] CreateModel model)
         {
             var category = _dbContext.Categories.ToList().FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
-                return NotFound(new { message = "Chưa truyền id vào" });
+                return NotFound(new { message = "Không tìm tháy category với id đó" });
             }
             if (!ModelState.IsValid)
             {

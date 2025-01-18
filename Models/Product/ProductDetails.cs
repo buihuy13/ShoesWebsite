@@ -9,9 +9,8 @@ namespace WDProject.Models.Product
         public int Id { get; set; }
         [Required]
         public int ProductId { get; set; }
-        [Required]
         [ForeignKey("ProductId")]
-        public Products Product { get; set; }
+        public Products? Product { get; set; }
 
         [Required]
         public int Size { get; set; }
@@ -21,5 +20,6 @@ namespace WDProject.Models.Product
 
         [Required]
         public int StockQuantity { get; set; }
+        public List<OrderDetails>? OrderDetails { get; set; }
     }
 }

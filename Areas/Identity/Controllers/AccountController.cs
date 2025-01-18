@@ -1,15 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Security.Claims;
-using System.Text.Json.Serialization;
 using Utilities;
 using WDProject.Areas.Identity.Models.Account;
 using WDProject.Data;
+using WDProject.Models.Database;
 using WDProject.Models.Identity;
 using WDProject.Services;
 
@@ -19,26 +15,22 @@ namespace WDProject.Areas.Identity.Controllers
     public class AccountController : Controller
     {
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private ILogger<AccountController> _logger;
+        private readonly MyDbContext _dbContext;
         private readonly TokenService _tokenService;
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, ILogger<AccountController> logger, TokenService tokenService)
+        public AccountController(UserManager<User> userManager, MyDbContext dbContext, ILogger<AccountController> logger, TokenService tokenService)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
+            _dbContext = dbContext;
             _logger = logger;
             _tokenService = tokenService;
         }
 
         [HttpPost("/auth/login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel model, string returnUrl = null)
+        public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            returnUrl ??= Url.Content("~/");
-            ViewData["ReturnUrl"] = returnUrl;
             if (!ModelState.IsValid)
             {
-                _logger.LogInformation("Received data: {Data}", model.UserNameOrEmail);
-
                 var errors = ModelState.Values
                             .SelectMany(e => e.Errors)
                             .Select(e => e.ErrorMessage)
@@ -61,6 +53,10 @@ namespace WDProject.Areas.Identity.Controllers
 
             // Tạo JWT
             var token = await _tokenService.GenerateTokens(user);
+            if (token == null)
+            {
+                return BadRequest(new { message = "Dữ liệu không hợp lệ" });
+            }
 
             return Ok(new
             {
@@ -72,7 +68,7 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpPost("/api/accesstoken")]
-        public async Task<IActionResult> RefreshToken([FromBody]RefreshTokenRequest request)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
             try
             {
@@ -104,25 +100,28 @@ namespace WDProject.Areas.Identity.Controllers
             }
         }
 
-        [HttpPost("/auth/logout/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LogOut(string? id)
+        [HttpPost("/auth/logout")]
+        [Authorize]
+        public async Task<IActionResult> LogOut([FromBody]IdModel IdModel)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user!= null)
+            if (string.IsNullOrEmpty(IdModel.Id))
+            {
+                return NotFound(new { message = "Không tìm thấy user" });
+            }
+            var user = await _userManager.FindByIdAsync(IdModel.Id);
+            if (user != null)
             {
                 user.RefreshToken = null;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
             }
             _logger.LogInformation("Đăng xuất thành công");
             return Ok(new { message = "Đăng xuất thành công" });
         }
 
         [HttpPost("/auth/register")]
-        public async Task<IActionResult> Register([FromBody]RegisterModel model, string returnUrl = null)
+        public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            returnUrl ??= Url.Content("~/");
-            ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
                 if (model.Password != model.ConfirmPassword)
@@ -136,7 +135,7 @@ namespace WDProject.Areas.Identity.Controllers
                     return BadRequest(new { message = "Sai định dạng Email" });
                 }
                 var user = new User() { Email = model.Email, UserName = model.UserName, TotalPurchase = 0 };
-                var result = await _userManager.CreateAsync(user,model.Password);
+                var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, RoleName.user);
@@ -162,10 +161,10 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpPut("/users/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit([FromBody]EditModel model, string? id)
+        [Authorize]
+        public async Task<IActionResult> Edit([FromBody] EditModel model)
         {
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(model.Id))
             {
                 return NotFound(new { message = "Không tìm thấy user" });
             }
@@ -179,7 +178,7 @@ namespace WDProject.Areas.Identity.Controllers
                 }
                 return BadRequest(new { message = "Sai định dạng" });
             }
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null)
             {
                 return NotFound(new { message = "Không tìm thấy user" });
@@ -189,7 +188,9 @@ namespace WDProject.Areas.Identity.Controllers
                 user.Email = model.Email;
                 user.UserName = model.UserName;
                 user.HomeAddress = model.HomeAddress;
+                user.PhoneNumber = model.PhoneNumber;
                 await _userManager.UpdateAsync(user);
+                await _dbContext.SaveChangesAsync();
                 return Ok(new { message = "Chỉnh sửa thành công" });
             }
             catch (Exception ex)
@@ -201,40 +202,47 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpGet("/users/{id}")]
-        public async Task<IActionResult> Details(string? id)
+        public async Task<IActionResult> Details([FromBody]IdModel idModel)
         {
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(idModel.Id))
             {
                 _logger.LogInformation("Không tìm thấy user");
                 return NotFound(new { message = "Không tìm thấy user" });
             }
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(idModel.Id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
                 return NotFound(new { message = "Không tìm thấy user" });
             }
-            return Ok(new { data = JsonConvert.SerializeObject(user) });
+            return Ok(new { data = new
+            {
+                HomeAddress = user.HomeAddress,
+                UserName = user.UserName,
+                TotalPurchase = user.TotalPurchase,
+                Phone = user.PhoneNumber,
+            }
+            });
         }
 
         [HttpDelete("/users/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string? id)
+        public async Task<IActionResult> DeleteConfirmed([FromBody] IdModel idModel)
         {
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(idModel.Id))
             {
                 _logger.LogInformation("Không tìm thấy user");
                 return NotFound(new { message = "Không tìm thấy user" });
             }
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(idModel.Id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new {message = "Không tìm thấy user"});
+                return NotFound(new { message = "Không tìm thấy user" });
             }
             try
             {
                 await _userManager.DeleteAsync(user);
+                await _dbContext.SaveChangesAsync();
                 return Ok(new { message = "Xóa thành công" });
             }
             catch (Exception ex)

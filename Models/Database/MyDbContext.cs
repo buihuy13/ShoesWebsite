@@ -8,7 +8,7 @@ namespace WDProject.Models.Database
     public class MyDbContext : IdentityDbContext
     {
         public DbSet<Categories> Categories { get; set; }   
-        public DbSet<Order> Order { get; set; } 
+        public DbSet<Order> Orders { get; set; } 
         public DbSet<OrderDetails> OrderDetails { get; set; }   
         public DbSet<ProductDetails> ProductDetails { get; set; }
         public DbSet<Products> Products { get; set; }
@@ -53,14 +53,6 @@ namespace WDProject.Models.Database
                    .HasForeignKey(pd => pd.ProductId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            //Đảm bảo khi xóa 1 products thì orderdetails có tham chiếu products đó cũng bị xóa
-            builder.Entity<Products>()
-                   .HasMany(p => p.OrderDetails)
-                   .WithOne(pd => pd.Product)
-                   .HasForeignKey(pd => pd.ProductId)
-                   .OnDelete(DeleteBehavior.Cascade);
-
-
             //Đảm bảo khi xóa 1 user thì orders có tham chiếu user đó cũng bị xóa
             builder.Entity<User>()
                    .HasMany(u => u.Orders)
@@ -73,6 +65,20 @@ namespace WDProject.Models.Database
                    .HasMany(o => o.OrderDetails)
                    .WithOne(od => od.Order)
                    .HasForeignKey(od => od.OrderId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            //Đảm bảo khi xóa 1 products thì productimages có tham chiếu products đó cũng bị xóa
+            builder.Entity<Products>()
+                   .HasMany(p => p.Images)
+                   .WithOne(pi => pi.Product)
+                   .HasForeignKey(pi => pi.ProductId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            //Đảm bảo khi xóa 1 products thì orderdetails có tham chiếu products đó cũng bị xóa
+            builder.Entity<ProductDetails>()
+                   .HasMany(p => p.OrderDetails)
+                   .WithOne(pd => pd.ProductDetails)
+                   .HasForeignKey(pd => pd.ProductDetailsId)
                    .OnDelete(DeleteBehavior.Cascade);
 
         }

@@ -4,10 +4,13 @@ namespace WDProject.Areas.Identity.Models.Admin
 {
     public class CreateModel
     {
-        [DataType(DataType.EmailAddress),StringLength(50)]
+        [Required]
+        [EmailAddress]
         public string Email { get; set; }
+        [Required]
         [StringLength(50)]
         public string UserName  { get; set; }
+        [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; }
         [StringLength(100)]

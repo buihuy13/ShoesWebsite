@@ -2,9 +2,9 @@
 
 namespace WDProject.Areas.Identity.Models.Account
 {
-    public class RefreshTokenRequest
+    public class IdModel
     {
         [Required]
-        public string RefreshToken { get; set; }
+        public string Id { get; set; }
     }
 }

@@ -12,9 +12,8 @@ namespace WDProject.Models.Product
         [Required]
         public string UserId { get; set; }
 
-        [Required]
         [ForeignKey("UserId")]
-        public User User { get; set; }
+        public User? User { get; set; }
 
         [Required]
         public Decimal TotalPrice { get; set; }

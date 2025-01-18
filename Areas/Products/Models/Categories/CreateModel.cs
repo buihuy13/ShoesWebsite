@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WDProject.Areas.Products.Models.Category
+namespace WDProject.Areas.Product.Models.Category
 {
     public class CreateModel
     {

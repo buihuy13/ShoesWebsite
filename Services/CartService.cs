@@ -22,7 +22,7 @@ namespace WDProject.Services
         public List<CartItem> GetItems()
         {
             var session = _context.Session;
-            string jsonCart = session.GetString(CARTKEY);
+            string? jsonCart = session.GetString(CARTKEY);
             if (string.IsNullOrEmpty(jsonCart))
             {
                 return JsonConvert.DeserializeObject<List<CartItem>>(jsonCart);

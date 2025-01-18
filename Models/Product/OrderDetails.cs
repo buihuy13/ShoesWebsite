@@ -11,16 +11,14 @@ namespace WDProject.Models.Product
         [Required]
         public int OrderId { get; set; }
 
-        [Required]
         [ForeignKey("OrderId")]
-        public Order Order {  get; set; }
+        public Order? Order {  get; set; }
 
         [Required]
-        public int ProductId { get; set; }
+        public int ProductDetailsId { get; set; }
 
-        [Required]
-        [ForeignKey("ProductId")]
-        public Products Product { get; set; }
+        [ForeignKey("ProductDetailsId")]
+        public ProductDetails? ProductDetails { get; set; }
 
         [Required]
         public int Quantity { get; set; }

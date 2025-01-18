@@ -11,8 +11,8 @@ using WDProject.Models.Database;
 namespace WDProject.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250113073126_Init_And_Fake_Data")]
-    partial class Init_And_Fake_Data
+    [Migration("20250115095451_init database")]
+    partial class initdatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -265,7 +265,7 @@ namespace WDProject.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Order");
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("WDProject.Models.Product.OrderDetails", b =>
@@ -277,7 +277,7 @@ namespace WDProject.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int>("ProductDetailsId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -287,7 +287,7 @@ namespace WDProject.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("ProductDetailsId");
 
                     b.ToTable("OrderDetails");
                 });
@@ -325,7 +325,6 @@ namespace WDProject.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("ImageUrl")
@@ -374,7 +373,7 @@ namespace WDProject.Migrations
                     b.Property<string>("RefreshToken")
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<decimal>("TotalPurchase")
@@ -453,15 +452,15 @@ namespace WDProject.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WDProject.Models.Product.Products", "Product")
+                    b.HasOne("WDProject.Models.Product.ProductDetails", "ProductDetails")
                         .WithMany("OrderDetails")
-                        .HasForeignKey("ProductId")
+                        .HasForeignKey("ProductDetailsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Order");
 
-                    b.Navigation("Product");
+                    b.Navigation("ProductDetails");
                 });
 
             modelBuilder.Entity("WDProject.Models.Product.ProductDetails", b =>
@@ -504,11 +503,14 @@ namespace WDProject.Migrations
                     b.Navigation("OrderDetails");
                 });
 
+            modelBuilder.Entity("WDProject.Models.Product.ProductDetails", b =>
+                {
+                    b.Navigation("OrderDetails");
+                });
+
             modelBuilder.Entity("WDProject.Models.Product.Products", b =>
                 {
                     b.Navigation("Details");
-
-                    b.Navigation("OrderDetails");
 
                     b.Navigation("ProductsCategories");
                 });

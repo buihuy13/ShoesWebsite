@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using WDProject.Areas.Identity.Models.Admin;
 using WDProject.Data;
 using WDProject.Models.Identity;
@@ -31,6 +30,10 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                 var model = new UserModel();
                 model.currentPage = currentPage;
                 var user = await _userManager.GetUserAsync(this.User);
+                if (user == null)
+                {
+                    return Unauthorized(new { message = "lỗi" });
+                }
                 var adminUserId = await _userManager.GetUserIdAsync(user);
                 var userList = _userManager.Users.Where(u => u.Id != adminUserId).ToList();
 
@@ -45,7 +48,10 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                 var qr = userList.Skip((model.currentPage - 1) * model.ITEMS_PER_PAGE).Take(model.ITEMS_PER_PAGE);
                 model.Users = qr.ToList();
 
-                return Ok(new {data = JsonConvert.SerializeObject(model.Users)});
+                return Ok(new
+                {
+                    data = model.Users
+                });
             }
             catch (Exception ex)
             {
@@ -54,9 +60,8 @@ namespace ShoesWebsite.Areas.Identity.Controllers
             }
         }
 
-        [HttpPost("/admin/create")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromBody]CreateModel model)
+        [HttpPost("/admin/new")]
+        public async Task<IActionResult> Create([FromBody] CreateModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -66,7 +71,7 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                     _logger.LogError(error.ErrorMessage);
                     ModelState.AddModelError(string.Empty, error.ErrorMessage);
                 }
-                return BadRequest(new { message = "Có lỗi khi tạo người dùng" }); 
+                return BadRequest(new { message = "Có lỗi khi tạo người dùng" });
             }
             try
             {
@@ -77,7 +82,7 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                     EmailConfirmed = true,
                     TotalPurchase = 0
                 };
-                await _userManager.CreateAsync(user,model.Password);
+                await _userManager.CreateAsync(user, model.Password);
                 await _userManager.AddToRoleAsync(user, RoleName.user);
                 return Ok(new { message = "Tạo người dùng thành công" });
             }
@@ -85,50 +90,6 @@ namespace ShoesWebsite.Areas.Identity.Controllers
             {
                 _logger.LogError(ex.Message);
                 return BadRequest(new { message = "Có lỗi khi tạo người dùng" });
-            }
-        }
-
-        [HttpGet("/admin/details/{id}")]
-        public async Task<IActionResult> Details(string? id)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            return Ok(new { data = JsonConvert.SerializeObject(user) });
-        }
-
-        [HttpPost("/admin/delete/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string? id)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
-            try
-            {
-                await _userManager.DeleteAsync(user);
-                return Ok(new { message = "Xóa người dùng thành công" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                return BadRequest(new { message = "Lỗi khi xóa người dùng" });
             }
         }
     }

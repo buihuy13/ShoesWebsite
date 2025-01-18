@@ -3,21 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WDProject.Models.Product
 {
-    public class ProductsCategories
+    public class ProductImage
     {
         [Key]
         public int Id { get; set; }
-
         [Required]
+        public string FileName { get; set; }
         public int ProductId { get; set; }
-
-        [Required]
-        public int CategoryId { get; set; }
-
         [ForeignKey("ProductId")]
-        public Products? Product {  get; set; }
-
-        [ForeignKey("CategoryId")]
-        public Categories? Category { get; set; }
+        public Products Product { get; set; }
     }
 }
