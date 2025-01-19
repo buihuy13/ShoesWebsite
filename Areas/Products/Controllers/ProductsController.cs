@@ -140,8 +140,10 @@ namespace WDProject.Areas.Product.Controllers
                     Brand = model.Brand
                 };
                 await _dbcontext.AddAsync(product);
+                Console.WriteLine(model.Files.Count());
                 if (model.Files != null && model.Files.Count() > 0)
                 {
+                    Console.WriteLine("Vao duoc file");
                     foreach (var NewFile in model.Files)
                     {
                         var file1 = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + Path.GetExtension(NewFile.FileName);
