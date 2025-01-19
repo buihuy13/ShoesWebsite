@@ -118,7 +118,6 @@ namespace WDProject.Areas.Product.Controllers
         }
 
         [HttpPost("/products")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateProductsModel model)
         {
             if (!ModelState.IsValid)
@@ -184,15 +183,14 @@ namespace WDProject.Areas.Product.Controllers
 
         //Ổn rồi
         [HttpDelete("/products/{id}")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed([FromBody]IdModel idModel)
+        public async Task<IActionResult> DeleteConfirmed(int? id)
         {
-            if (idModel.Id == null)
+            if (id == null)
             {
                 return NotFound(new { message = "Không tìm thấy giày" });
             }
 
-            var product = await _dbcontext.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == idModel.Id);
+            var product = await _dbcontext.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
                 return NotFound(new { message = "Không tìm thấy giày" });
@@ -220,7 +218,7 @@ namespace WDProject.Areas.Product.Controllers
         }
 
         [HttpPut("/products/{id}")]
-        public async Task<IActionResult> Update([FromBody]CreateProductsModel model, int id)
+        public async Task<IActionResult> Update(CreateProductsModel model, int id)
         {
             if (!ModelState.IsValid)
             {

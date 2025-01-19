@@ -48,9 +48,18 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                 var qr = userList.Skip((model.currentPage - 1) * model.ITEMS_PER_PAGE).Take(model.ITEMS_PER_PAGE);
                 model.Users = qr.ToList();
 
+                var response = model.Users.Select(u => new
+                {
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    TotalPurchase = u.TotalPurchase,
+                    HomeAddress = u.HomeAddress,
+                    PhoneNumber = u.PhoneNumber
+                });
+
                 return Ok(new
                 {
-                    data = model.Users
+                    data = response
                 });
             }
             catch (Exception ex)

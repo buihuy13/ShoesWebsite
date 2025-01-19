@@ -100,15 +100,15 @@ namespace WDProject.Areas.Identity.Controllers
             }
         }
 
-        [HttpPost("/auth/logout")]
+        [HttpPost("/auth/logout/{id}")]
         [Authorize]
-        public async Task<IActionResult> LogOut([FromBody]IdModel IdModel)
+        public async Task<IActionResult> LogOut(string? id)
         {
-            if (string.IsNullOrEmpty(IdModel.Id))
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound(new { message = "Không tìm thấy user" });
             }
-            var user = await _userManager.FindByIdAsync(IdModel.Id);
+            var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
                 user.RefreshToken = null;
@@ -202,14 +202,14 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpGet("/users/{id}")]
-        public async Task<IActionResult> Details([FromBody]IdModel idModel)
+        public async Task<IActionResult> Details(string? id)
         {
-            if (string.IsNullOrEmpty(idModel.Id))
+            if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
                 return NotFound(new { message = "Không tìm thấy user" });
             }
-            var user = await _userManager.FindByIdAsync(idModel.Id);
+            var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
@@ -226,14 +226,14 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpDelete("/users/{id}")]
-        public async Task<IActionResult> DeleteConfirmed([FromBody] IdModel idModel)
+        public async Task<IActionResult> DeleteConfirmed(string? id)
         {
-            if (string.IsNullOrEmpty(idModel.Id))
+            if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation("Không tìm thấy user");
                 return NotFound(new { message = "Không tìm thấy user" });
             }
-            var user = await _userManager.FindByIdAsync(idModel.Id);
+            var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
