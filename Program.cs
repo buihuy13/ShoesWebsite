@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using WDProject.Models.Database;
 using WDProject.Models.Identity;
+using WDProject.Models.Token;
 using WDProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -109,10 +110,15 @@ builder.Services.AddTransient<CartService>();
 //Đăng ký cho dịch vụ sử dụng jwt Token
 builder.Services.AddTransient<TokenService>();
 
+//Xử lý khi include tránh lặp vô tận
 builder.Services.AddControllers()
     .AddJsonOptions(options => {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
+
+builder.Services.Configure<JwtKey>(
+    builder.Configuration.GetSection("JwtConfig")
+);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

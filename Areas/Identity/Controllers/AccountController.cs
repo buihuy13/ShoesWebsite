@@ -1,12 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using NuGet.Common;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Utilities;
 using WDProject.Areas.Identity.Models.Account;
 using WDProject.Data;
 using WDProject.Models.Database;
 using WDProject.Models.Identity;
+using WDProject.Models.Token;
 using WDProject.Services;
 
 namespace WDProject.Areas.Identity.Controllers
@@ -14,16 +21,18 @@ namespace WDProject.Areas.Identity.Controllers
     [Area("Identity")]
     public class AccountController : Controller
     {
+        private readonly string _secretKey;
         private readonly UserManager<User> _userManager;
         private ILogger<AccountController> _logger;
         private readonly MyDbContext _dbContext;
         private readonly TokenService _tokenService;
-        public AccountController(UserManager<User> userManager, MyDbContext dbContext, ILogger<AccountController> logger, TokenService tokenService)
+        public AccountController(UserManager<User> userManager, MyDbContext dbContext, ILogger<AccountController> logger, TokenService tokenService,IOptions<JwtKey> jwtKey)
         {
             _userManager = userManager;
             _dbContext = dbContext;
             _logger = logger;
             _tokenService = tokenService;
+            _secretKey = jwtKey.Value.SecretKey;
         }
 
         [HttpPost("/auth/login")]
@@ -249,6 +258,56 @@ namespace WDProject.Areas.Identity.Controllers
             {
                 _logger.LogError(ex.Message);
                 return BadRequest(new { message = "Lỗi khi xóa" });
+            }
+        }
+
+        [HttpGet("/auth/account")]
+        public async Task<IActionResult> GetUserByToken([FromBody]AccessTokenRequest tokenRequest)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes(_secretKey);
+
+                // Validate token và lấy thông tin claims
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(tokenRequest.AccessToken, validationParameters, out SecurityToken validatedToken);
+
+                // Lấy user ID từ claims
+                var userIdClaim = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier);
+                
+                if (userIdClaim == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy user" });
+                }
+
+                var userId = userIdClaim.Value;
+
+                // Lấy user từ database
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy user" });
+                }
+                    
+
+                return Ok(new {data = user});
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                return StatusCode(401, new { message = "Token đã hết hạn" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
