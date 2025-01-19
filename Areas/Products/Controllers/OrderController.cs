@@ -37,7 +37,7 @@ namespace WDProject.Areas.Product.Controllers
             try
             {
                 var listorders = _dbContext.Orders.Where(o => o.UserId == user.Id).OrderBy(o => o.OrderDate);
-                return Ok(new { data = JsonConvert.SerializeObject(listorders) });
+                return Ok(new { data = listorders });
             }
             catch
             {
@@ -45,7 +45,6 @@ namespace WDProject.Areas.Product.Controllers
             }
         }
         //Details của 1 order
-        //Chưa xử lý phần image
         [HttpGet("/orders/details/{id}")]
         public async Task<IActionResult> GetOrderDetails(int? id)
         {
@@ -53,7 +52,10 @@ namespace WDProject.Areas.Product.Controllers
             {
                 return NotFound(new { message = "Không tìm thấy order" });
             }
-            var order = await _dbContext.OrderDetails.Where(o => o.Id == id).Include(o => o.ProductDetails).ThenInclude(pd => pd.Product).FirstOrDefaultAsync();
+            var order = await _dbContext.OrderDetails.Where(o => o.Order.Id == id).Include(o => o.ProductDetails)
+                                                                            .ThenInclude(pd => pd.Product)
+                                                                            .ThenInclude(p => p.Images)
+                                                                            .FirstOrDefaultAsync();
             if (order == null)
             {
                 return NotFound(new { message = "Không tìm thấy order" });
@@ -68,7 +70,7 @@ namespace WDProject.Areas.Product.Controllers
                         image.FileName = $"http://localhost:8080/contents/Products/{image.FileName}";
                     }
                 }
-                return Ok(new { data = JsonConvert.SerializeObject(order) });
+                return Ok(new { data = order });
             }
             catch (Exception ex)
             {

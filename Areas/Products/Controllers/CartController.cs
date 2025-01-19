@@ -122,7 +122,7 @@ namespace WDProject.Areas.Product.Controllers
 
         [HttpPost("/cart/new")]
         //id của user
-        public async Task<IActionResult> NewCart([FromBody]string? id)
+        public async Task<IActionResult> NewCart(string? id)
         {
             if (string.IsNullOrEmpty(id))
             {

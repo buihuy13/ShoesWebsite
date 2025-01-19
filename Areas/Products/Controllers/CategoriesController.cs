@@ -71,7 +71,6 @@ namespace WDProject.Areas.Product.Controllers
                 }
                 return BadRequest(new { message = "Dữ liệu không hợp lệ", error = errors });
             }
-
             try
             {
                 await _dbContext.AddAsync(new Categories() { Name = model.Name, Description = model.Description });
