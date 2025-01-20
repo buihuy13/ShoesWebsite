@@ -77,9 +77,11 @@ builder.Services.AddCors(options =>
     {
         builder.WithOrigins("http://localhost:5173")
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials(); // ✅ Thêm dòng này để cho phép credentials
     });
 });
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -112,7 +114,8 @@ builder.Services.AddTransient<TokenService>();
 
 //Xử lý khi include tránh lặp vô tận
 builder.Services.AddControllers()
-    .AddJsonOptions(options => {
+    .AddJsonOptions(options =>
+    {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
