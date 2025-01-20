@@ -268,66 +268,65 @@ namespace WDProject.Areas.Identity.Controllers
                 return BadRequest(new { message = "Lỗi khi xóa" });
             }
         }
-
-            [HttpGet("/auth/account")]
-            public async Task<IActionResult> GetUserByToken()
+        [HttpGet("/auth/account")]
+        public async Task<IActionResult> GetUserByToken()
+        {
+            try
             {
-                try
+                var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                if (string.IsNullOrEmpty(token))
                 {
-                    var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-                    if (string.IsNullOrEmpty(token))
-                    {
-                        return NotFound(new { message = "Không tìm thấy token trong header" });
-                    }
+                    return NotFound(new { message = "Không tìm thấy token trong header" });
+                }
                 var tokenHandler = new JwtSecurityTokenHandler();
-                    var key = Encoding.ASCII.GetBytes(_secretKey);
+                var key = Encoding.ASCII.GetBytes(_secretKey);
 
-                    // Validate token và lấy thông tin claims
-                    var validationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ClockSkew = TimeSpan.Zero
-                    };
-
-                    ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-
-                    // Lấy user ID từ claims
-                    var userIdClaim = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier);
-                
-                    if (userIdClaim == null)
-                    {
-                        return NotFound(new { message = "Không tìm thấy user" });
-                    }
-
-                    var userId = userIdClaim.Value;
-
-                    // Lấy user từ database
-                    var user = await _userManager.FindByIdAsync(userId);
-                    if (user == null)
-                    {
-                        return NotFound(new { message = "Không tìm thấy user" });
-                    }
-                    var data = new
-                    {
-                        Email = user.Email,
-                        PhoneNumber = user.PhoneNumber,
-                        UserName = user.UserName,
-                        Id = user.Id,
-                        Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()
-                    };
-                return Ok(new {data});
-                }
-                catch (SecurityTokenExpiredException)
+                // Validate token và lấy thông tin claims
+                var validationParameters = new TokenValidationParameters
                 {
-                    return StatusCode(401, new { message = "Token đã hết hạn" });
-                }
-                catch (Exception ex)
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                ClaimsPrincipal claimsPrincipal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+
+                // Lấy user ID từ claims
+                var userIdClaim = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier);
+
+                if (userIdClaim == null)
                 {
-                    return BadRequest(new { message = ex.Message });
+                    return NotFound(new { message = "Không tìm thấy user" });
                 }
+
+                var userId = userIdClaim.Value;
+
+                // Lấy user từ database
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy user" });
+                }
+                var data = new
+                {
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    UserName = user.UserName,
+                    Id = user.Id,
+                    Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()
+                };
+                return Ok(new { data });
             }
+            catch (SecurityTokenExpiredException)
+            {
+                return StatusCode(401, new { message = "Token đã hết hạn" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

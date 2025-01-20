@@ -483,8 +483,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-
-#Own ignore file
 appsettings.json
 
 *.sql

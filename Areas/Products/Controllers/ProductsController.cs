@@ -24,7 +24,7 @@ namespace WDProject.Areas.Product.Controllers
         //Đã ổn
         [HttpGet("/products")]
         [AllowAnonymous]
-        public async Task<IActionResult> IndexAsync([FromBody]SortModel sort,[FromQuery(Name = "p")] int currentPage)
+        public async Task<IActionResult> IndexAsync(SortModel sort,[FromQuery(Name = "p")] int currentPage)
         {
             try
             {
