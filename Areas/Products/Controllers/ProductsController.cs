@@ -98,12 +98,12 @@ namespace WDProject.Areas.Product.Controllers
                     Price = p.Price,
                     Images = p.Images.Select(i => i.FileName),
                     Brand = p.Brand,
-                    CurrentPage = model.currentPage,
-                    TotalPage = totalProduct
                 });
                 return Ok(new
                 {
-                    data = ProductList
+                    data = ProductList,
+                    CurrentPage = model.currentPage,
+                    TotalPage = totalProduct
                 });
             }
             catch (Exception ex)
