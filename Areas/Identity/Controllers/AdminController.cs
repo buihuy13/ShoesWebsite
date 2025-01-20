@@ -92,7 +92,14 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                     TotalPurchase = 0
                 };
                 await _userManager.CreateAsync(user, model.Password);
-                await _userManager.AddToRoleAsync(user, RoleName.user);
+                if (model.Role == "Admin")
+                {
+                    await _userManager.AddToRoleAsync(user, RoleName.admin);
+                }
+                else
+                {
+                    await _userManager.AddToRoleAsync(user, RoleName.user);
+                }
                 return StatusCode(201, new { message = "Tạo người dùng thành công" });
             }
             catch (Exception ex)

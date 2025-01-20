@@ -15,5 +15,6 @@ namespace WDProject.Areas.Identity.Models.Admin
         public string Password { get; set; }
         [StringLength(100)]
         public string? HomeAddress { get; set; }
+        public string? Role { get; set; }
     }
 }

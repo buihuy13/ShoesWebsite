@@ -65,12 +65,22 @@ namespace WDProject.Areas.Identity.Controllers
                 return BadRequest(new { message = "Dữ liệu không hợp lệ" });
             }
 
+            var userData = new
+            {
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                UserName = user.UserName,
+                Id = user.Id,
+                Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()
+            };
+
             return Ok(new
             {
                 message = "Đăng nhập thành công",
                 accesstoken = token.AccessToken,
                 refreshtoken = token.RefreshToken,
-                rememberme = model.RememberMe
+                rememberme = model.RememberMe,
+                user = userData
             });
         }
 
