@@ -176,7 +176,7 @@ namespace WDProject.Areas.Product.Controllers
                 }
                 await _dbcontext.SaveChangesAsync();
                 _logger.LogInformation("Tạo mới giày thành công");
-                return Ok(new { message = "Tạo mới giày thành công" });
+                return StatusCode(201, new { message = "Tạo mới giày thành công" });
             }
             catch (Exception ex)
             {

@@ -93,7 +93,7 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                 };
                 await _userManager.CreateAsync(user, model.Password);
                 await _userManager.AddToRoleAsync(user, RoleName.user);
-                return Ok(new { message = "Tạo người dùng thành công" });
+                return StatusCode(201, new { message = "Tạo người dùng thành công" });
             }
             catch (Exception ex)
             {

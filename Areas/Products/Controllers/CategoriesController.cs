@@ -74,7 +74,7 @@ namespace WDProject.Areas.Product.Controllers
             {
                 await _dbContext.AddAsync(new Categories() { Name = model.Name, Description = model.Description });
                 await _dbContext.SaveChangesAsync();
-                return Ok(new { message = "Tạo mới 1 category thành công" });
+                return StatusCode(201, new { message = "Tạo mới 1 category thành công" });
             }
             catch (Exception ex)
             {

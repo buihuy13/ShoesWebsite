@@ -85,7 +85,7 @@ namespace WDProject.Areas.Product.Controllers
 
                 await _dbcontext.AddAsync(productDetail);
                 await _dbcontext.SaveChangesAsync();
-                return Ok(new { message = "Thành công" });
+                return StatusCode(201, new { message = "Thành công" });
             }
             catch (Exception ex)
             {

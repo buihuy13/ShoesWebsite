@@ -147,7 +147,7 @@ namespace WDProject.Areas.Identity.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, RoleName.user);
                     _logger.LogInformation("Tạo tài khoản thành công");
-                    return Ok(new { message = "Đăng ký thành công" });
+                    return StatusCode(201,new { message = "Đăng ký thành công" });
                 }
                 else
                 {
@@ -295,8 +295,6 @@ namespace WDProject.Areas.Identity.Controllers
                 {
                     return NotFound(new { message = "Không tìm thấy user" });
                 }
-                    
-
                 return Ok(new {data = user});
             }
             catch (SecurityTokenExpiredException)
