@@ -23,6 +23,7 @@ namespace WDProject.Areas.Product.Controllers
 
         //Đã ổn
         [HttpGet("/products")]
+        [AllowAnonymous]
         public async Task<IActionResult> IndexAsync([FromBody]SortModel sort,[FromQuery(Name = "p")] int currentPage)
         {
             try
@@ -90,6 +91,7 @@ namespace WDProject.Areas.Product.Controllers
         }
 
         [HttpGet("/products/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetProduct(int? Id)
         {
             if (Id == null)

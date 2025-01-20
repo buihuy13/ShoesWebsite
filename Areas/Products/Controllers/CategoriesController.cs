@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using WDProject.Areas.Product.Models.Category;
 using WDProject.Data;
 using WDProject.Models.Database;

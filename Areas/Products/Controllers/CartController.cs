@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using WDProject.Areas.Product.Models.Cart;
 using WDProject.Models.CartModel;
 using WDProject.Models.Database;
@@ -11,6 +11,7 @@ using WDProject.Services;
 
 namespace WDProject.Areas.Product.Controllers
 {
+    [Authorize]
     public class CartController : Controller
     {
         private readonly CartService _cartService;

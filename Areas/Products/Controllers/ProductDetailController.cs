@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WDProject.Areas.Product.Models.ProductDetail;
+using WDProject.Data;
 using WDProject.Models.Database;
 using WDProject.Models.Product;
 
 namespace WDProject.Areas.Product.Controllers
 {
+    [Authorize(Roles = RoleName.admin)]
     public class ProductDetailController : Controller
     {
         private readonly MyDbContext _dbcontext;
@@ -17,6 +20,7 @@ namespace WDProject.Areas.Product.Controllers
             _logger = logger;
         }
         [HttpGet("/productdetails/{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetDetails(int id)
         {
             var product = await _dbcontext.Products.Include(p => p.Details)

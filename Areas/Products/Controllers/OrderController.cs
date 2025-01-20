@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using System.Runtime.InteropServices;
 using WDProject.Models.Database;
 using WDProject.Models.Identity;
 
