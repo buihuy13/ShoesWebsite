@@ -7,7 +7,7 @@ namespace WDProject.Areas.Product.Models.Category
         public List<Categories>? Categories { get; set; }
         public int totalCategories { get; set; }
         public int countPages { get; set; }
-        public int ITEMS_PER_PAGE { get; set; } = 20;
+        public int ITEMS_PER_PAGE { get; set; } = 6;
         public int currentPage { get; set; }
     }
 }

@@ -50,6 +50,7 @@ namespace ShoesWebsite.Areas.Identity.Controllers
 
                 var response = model.Users.Select(u => new
                 {
+                    Id = u.Id,
                     UserName = u.UserName,
                     Email = u.Email,
                     TotalPurchase = u.TotalPurchase,
@@ -59,7 +60,9 @@ namespace ShoesWebsite.Areas.Identity.Controllers
 
                 return Ok(new
                 {
-                    data = response
+                    data = response,
+                    Currentpage = model.currentPage,
+                    TotalPage = model.totalUsers,
                 });
             }
             catch (Exception ex)

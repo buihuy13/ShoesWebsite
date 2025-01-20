@@ -38,14 +38,34 @@ namespace WDProject.Areas.Product.Controllers
 
                 if (sort != null)
                 {
-                    if (!string.IsNullOrEmpty(sort.Name) && totalProduct > 0)
+                    if (totalProduct > 0) 
                     {
-                        qr = qr.Where(p => p.Name.ToLower().Contains(sort.Name.ToLower()));
-                    }
+                        if (!string.IsNullOrEmpty(sort.Name))
+                        {
+                            qr = qr.Where(p => p.Name.ToLower().Contains(sort.Name.ToLower()));
+                        }
 
-                    if (sort.CategoryId != null && totalProduct > 0)
-                    {
-                        qr = qr.Where(qr => qr.ProductsCategories.Where(pc => pc.CategoryId == sort.CategoryId).Any());
+                        if (sort.CategoryId != null)
+                        {
+                            qr = qr.Where(qr => qr.ProductsCategories.Where(pc => pc.CategoryId == sort.CategoryId).Any());
+                        }
+
+                        if (!string.IsNullOrEmpty(sort.Brand))
+                        {
+                            qr = qr.Where(q => q.Brand.ToLower().Contains(sort.Brand.ToLower()));
+                        }
+
+                        if (!string.IsNullOrEmpty(sort.Order))
+                        {
+                            if (sort.Order == "ascending")
+                            {
+                                qr = qr.OrderBy(p => p.Price);
+                            }
+                            if (sort.Order == "descending")
+                            {
+                                qr = qr.OrderBy(p => p.Price);
+                            }
+                        }
                     }
                 }
 
@@ -73,10 +93,13 @@ namespace WDProject.Areas.Product.Controllers
                 }
                 var ProductList = model.ProductModels.Select(p => new
                 {
+                    Id = p.Id,
                     Name = p.Name,
                     Price = p.Price,
                     Images = p.Images.Select(i => i.FileName),
-                    Brand = p.Brand
+                    Brand = p.Brand,
+                    CurrentPage = model.currentPage,
+                    TotalPage = totalProduct
                 });
                 return Ok(new
                 {

@@ -18,6 +18,8 @@ namespace WDProject.Areas.Product.Controllers
             _dbContext = dbContext;
             _logger = logger;
         }
+
+        [AllowAnonymous]
         [HttpGet("/categories")]
         public IActionResult Index([FromQuery(Name = "p")] int currentPage)
         {
@@ -38,14 +40,11 @@ namespace WDProject.Areas.Product.Controllers
                 var qr = categoryList.Skip((model.currentPage - 1) * model.ITEMS_PER_PAGE).Take(model.ITEMS_PER_PAGE);
                 model.Categories = qr.ToList();
 
-                var response = new
-                {
-                    data = model.Categories
-                };
-
                 return Ok(new
                 {
-                    data = model.Categories
+                    data = model.Categories,
+                    Currentpage = model.currentPage,
+                    TotalPage = model.totalCategories
                 });
             }
             catch (Exception ex)
