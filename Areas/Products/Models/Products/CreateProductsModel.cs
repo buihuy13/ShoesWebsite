@@ -12,6 +12,8 @@ namespace WDProject.Areas.Product.Models.Product
         public string? Brand { get; set; }
         public string? Description { get; set; }
         public List<int>? CategoryIds { get; set; }
+        public List<int>? Size {  get; set; }
+        public List<int>? Quantity { get; set; }
         public List<IFormFile>? Files { get; set; }
     }
 }

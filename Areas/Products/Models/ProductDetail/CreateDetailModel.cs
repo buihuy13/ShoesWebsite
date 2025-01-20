@@ -7,8 +7,6 @@ namespace WDProject.Areas.Product.Models.ProductDetail
         [Required]
         public int Size { get; set; }
         [Required]
-        public string Color { get; set; }
-        [Required]
         public int StockQuantity { get; set; }
     }
 }

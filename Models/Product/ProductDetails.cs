@@ -16,9 +16,6 @@ namespace WDProject.Models.Product
         public int Size { get; set; }
 
         [Required]
-        public string Color { get; set; }
-
-        [Required]
         public int StockQuantity { get; set; }
         public List<OrderDetails>? OrderDetails { get; set; }
     }

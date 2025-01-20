@@ -78,7 +78,6 @@ namespace WDProject.Areas.Product.Controllers
                 var productDetail = new ProductDetails()
                 {
                     ProductId = id,
-                    Color = model.Color,
                     Size = model.Size,
                     StockQuantity = model.StockQuantity,
                 };
@@ -112,7 +111,6 @@ namespace WDProject.Areas.Product.Controllers
 
             try
             {
-                product.Color = model.Color;
                 product.Size = model.Size;
                 product.StockQuantity = model.StockQuantity;
 

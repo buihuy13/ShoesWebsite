@@ -186,6 +186,21 @@ namespace WDProject.Areas.Product.Controllers
                     }
                 }
 
+                if (model.Size != null && model.Quantity!= null && model.Size.Count() > 0 && model.Size.Count() == model.Quantity.Count())
+                {
+                    var productDetailsList = new List<ProductDetails>();
+                    for (int i = 0; i < model.Size.Count(); i++)
+                    {
+                        productDetailsList.Add(new ProductDetails()
+                        {
+                            Product = product,
+                            Size = model.Size[i],
+                            StockQuantity = model.Quantity[i]
+                        });
+                    }
+                    await _dbcontext.AddRangeAsync(productDetailsList);
+                }
+
                 if (model.CategoryIds != null)
                 {
                     foreach (var cateId in model.CategoryIds)
