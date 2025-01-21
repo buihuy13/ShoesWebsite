@@ -1,5 +1,6 @@
 ﻿
 using Newtonsoft.Json;
+using WDProject.Areas.Product.Models.Cart;
 using WDProject.Models.CartModel;
 using WDProject.Models.Product;
 
@@ -23,7 +24,7 @@ namespace WDProject.Services
         {
             var session = _context.Session;
             string? jsonCart = session.GetString(CARTKEY);
-            if (string.IsNullOrEmpty(jsonCart))
+            if (!string.IsNullOrEmpty(jsonCart))
             {
                 return JsonConvert.DeserializeObject<List<CartItem>>(jsonCart);
             }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using WDProject.Areas.Product.Models.Cart;
 using WDProject.Models.Product;
 
 namespace WDProject.Models.CartModel

@@ -85,11 +85,16 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpPost("/api/accesstoken")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        public async Task<IActionResult> RefreshToken()
         {
             try
             {
-                var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == request.RefreshToken);
+                var token = Request.Headers["Refresh-Token"].FirstOrDefault()?.Split(" ").Last();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return StatusCode(401, new { message = "refresh token null" });
+                }
+                var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == token);
 
                 if (user == null)
                 {

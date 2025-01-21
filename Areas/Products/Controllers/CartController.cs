@@ -28,9 +28,9 @@ namespace WDProject.Areas.Product.Controllers
         public IActionResult GetCartItems()
         {
             var items = _cartService.GetItems();
-            return Ok(new 
-            { 
-                data = items 
+            return Ok(new
+            {
+                data = items
             });
         }
 
@@ -41,7 +41,8 @@ namespace WDProject.Areas.Product.Controllers
             {
                 return NotFound(new { message = "Không tồn tại product" });
             }
-            var product = await _dbContext.ProductDetails.Include(p => p.Product).ThenInclude(p => p.Images).FirstOrDefaultAsync(p => p.Id == cartModel.Id);
+            ProductDetails? product = await _dbContext.ProductDetails.Include(p => p.Product).ThenInclude(p => p.Images).FirstOrDefaultAsync(p => p.Id == cartModel.Id);
+
             if (product == null)
             {
                 return NotFound(new { message = "Không tồn tại product" });

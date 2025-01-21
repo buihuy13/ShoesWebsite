@@ -23,7 +23,7 @@ namespace WDProject.Areas.Product.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetDetails(int id)
         {
-            var product = await _dbcontext.Products.Include(p => p.Details)
+            var product = await _dbcontext.Products
                                                    .Include(p => p.Images)
                                                    .FirstOrDefaultAsync(p => p.Id == id);
 

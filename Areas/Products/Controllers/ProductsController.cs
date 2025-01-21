@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WDProject.Areas.Product.Models.Product;
@@ -52,7 +53,9 @@ namespace WDProject.Areas.Product.Controllers
 
                         if (!string.IsNullOrEmpty(sort.Brand))
                         {
-                            qr = qr.Where(q => q.Brand.ToLower().Contains(sort.Brand.ToLower()));
+                            var list = sort.Brand.Split(',');
+                            var brandList = list.Select(b => b.ToLower());
+                            qr = qr.Where(q => brandList.Contains(sort.Brand.ToLower()));
                         }
 
                         if (!string.IsNullOrEmpty(sort.Order))
