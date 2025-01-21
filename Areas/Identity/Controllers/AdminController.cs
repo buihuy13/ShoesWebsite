@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WDProject.Areas.Identity.Models.Admin;
 using WDProject.Data;
+using WDProject.Models.Database;
 using WDProject.Models.Identity;
 
 namespace ShoesWebsite.Areas.Identity.Controllers
@@ -15,12 +17,15 @@ namespace ShoesWebsite.Areas.Identity.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly ILogger<AdminController> _logger;
         private readonly RoleManager<IdentityRole> roleManager;
-        public AdminController(UserManager<User> userManager, SignInManager<User> signInManager, ILogger<AdminController> logger, RoleManager<IdentityRole> roleManager)
+        private readonly MyDbContext _dbContext;
+        public AdminController(UserManager<User> userManager, SignInManager<User> signInManager, 
+                               ILogger<AdminController> logger, RoleManager<IdentityRole> roleManager, MyDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             this.roleManager = roleManager;
+            _dbContext = dbContext;
         }
         [HttpGet("/admin/users")]
         public async Task<IActionResult> Index([FromQuery(Name = "p")] int currentPage)
@@ -62,7 +67,7 @@ namespace ShoesWebsite.Areas.Identity.Controllers
                 {
                     data = response,
                     Currentpage = model.currentPage,
-                    TotalPage = model.totalUsers,
+                    TotalPage = model.countPages,
                 });
             }
             catch (Exception ex)
@@ -109,6 +114,28 @@ namespace ShoesWebsite.Areas.Identity.Controllers
             {
                 _logger.LogError(ex.Message);
                 return BadRequest(new { message = "Có lỗi khi tạo người dùng" });
+            }
+        }
+
+        [HttpGet("/admin/details")]
+        public async Task<IActionResult> GetDetails()
+        {
+            try
+            {
+                var orderCount = await _dbContext.Orders.CountAsync();
+                var userCount = await _dbContext.Users.CountAsync();
+                var productCount = await _dbContext.Products.CountAsync();
+
+                return Ok(new
+                {
+                    OrderCount = orderCount,
+                    UserCount = userCount,
+                    ProductCount = productCount
+                });
+            }
+            catch
+            {
+                return BadRequest(new { message = "Lỗi khi lấy details" });
             }
         }
     }

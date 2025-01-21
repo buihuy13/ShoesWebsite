@@ -44,7 +44,7 @@ namespace WDProject.Areas.Product.Controllers
                 {
                     data = model.Categories,
                     Currentpage = model.currentPage,
-                    TotalPage = model.totalCategories
+                    TotalPage = model.countPages
                 });
             }
             catch (Exception ex)

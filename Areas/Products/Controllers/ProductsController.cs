@@ -55,7 +55,7 @@ namespace WDProject.Areas.Product.Controllers
                         {
                             var list = sort.Brand.Split(',');
                             var brandList = list.Select(b => b.ToLower());
-                            qr = qr.Where(q => brandList.Contains(sort.Brand.ToLower()));
+                            qr = qr.Where(q => brandList.Contains(q.Brand.ToLower()));
                         }
 
                         if (!string.IsNullOrEmpty(sort.Order))
@@ -106,7 +106,7 @@ namespace WDProject.Areas.Product.Controllers
                 {
                     data = ProductList,
                     CurrentPage = model.currentPage,
-                    TotalPage = totalProduct
+                    TotalPage = model.countPages
                 });
             }
             catch (Exception ex)

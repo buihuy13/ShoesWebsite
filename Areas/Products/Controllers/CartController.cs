@@ -72,17 +72,13 @@ namespace WDProject.Areas.Product.Controllers
             }
         }
 
-        [HttpDelete("/cart")]
-        public IActionResult DeleteCartItems([FromBody]CartModel cartModel)
+        [HttpDelete("/cart/{id}")]
+        public IActionResult DeleteCartItems(int id)
         {
-            if (cartModel.Id == null)
-            {
-                return NotFound(new { message = "Không tồn tại product" });
-            }
             try
             {
                 var cartItems = _cartService.GetItems();
-                var item = cartItems.FirstOrDefault(c => c.Product.Id == cartModel.Id);
+                var item = cartItems.FirstOrDefault(c => c.Product.Id == id);
                 if (item == null)
                 {
                     return NotFound(new { message = "Không tìm thấy item cần xóa" });
