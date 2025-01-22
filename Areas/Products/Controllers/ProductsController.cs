@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using WDProject.Areas.Product.Models.Product;
 using WDProject.Data;
 using WDProject.Models.Database;
@@ -164,10 +165,8 @@ namespace WDProject.Areas.Product.Controllers
                     Brand = model.Brand
                 };
                 await _dbcontext.AddAsync(product);
-                Console.WriteLine(model.Files.Count());
                 if (model.Files != null && model.Files.Count() > 0)
                 {
-                    Console.WriteLine("Vao duoc file");
                     foreach (var NewFile in model.Files)
                     {
                         var file1 = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + Path.GetExtension(NewFile.FileName);
@@ -184,32 +183,35 @@ namespace WDProject.Areas.Product.Controllers
                         });
                     }
                 }
-
-                if (model.Size != null && model.Quantity!= null && model.Size.Count() > 0 && model.Size.Count() == model.Quantity.Count())
+                if (!string.IsNullOrEmpty(model.Size) && !string.IsNullOrEmpty(model.Quantity))
                 {
-                    var productDetailsList = new List<ProductDetails>();
-                    for (int i = 0; i < model.Size.Count(); i++)
+                    var sizeList = JsonConvert.DeserializeObject<List<int>>(model.Size);
+                    var quantityList = JsonConvert.DeserializeObject<List<int>>(model.Quantity);
+
+                    if (sizeList != null && quantityList != null && sizeList.Count() > 0 && sizeList.Count() == quantityList.Count())
                     {
-                        productDetailsList.Add(new ProductDetails()
+                        var productDetailsList = new List<ProductDetails>();
+                        for (int i = 0; i < model.Size.Count(); i++)
                         {
-                            Product = product,
-                            Size = model.Size[i],
-                            StockQuantity = model.Quantity[i]
-                        });
+                            productDetailsList.Add(new ProductDetails()
+                            {
+                                Product = product,
+                                Size = model.Size[i],
+                                StockQuantity = model.Quantity[i]
+                            });
+                        }
+                        await _dbcontext.AddRangeAsync(productDetailsList);
                     }
-                    await _dbcontext.AddRangeAsync(productDetailsList);
                 }
 
-                if (model.CategoryIds != null)
+                if (!string.IsNullOrEmpty(model.CategoryIds))
                 {
-                    foreach (var cateId in model.CategoryIds)
+                    int x = int.Parse(model.CategoryIds);
+                    await _dbcontext.AddAsync(new ProductsCategories()
                     {
-                        await _dbcontext.AddAsync(new ProductsCategories()
-                        {
-                            Product = product,
-                            CategoryId = cateId
-                        });
-                    }
+                        Product = product,
+                        CategoryId = x
+                    });
                 }
                 await _dbcontext.SaveChangesAsync();
                 _logger.LogInformation("Tạo mới giày thành công");
@@ -270,7 +272,7 @@ namespace WDProject.Areas.Product.Controllers
                 var newCate = model.CategoryIds;
                 var addNewCate = newCate.Where(c => !oldCate.Contains(c));
                 var deleteCate = from productCate in product.ProductsCategories
-                                 where !newCate.Contains(productCate.CategoryId)
+                                 where !newCate.Contains(model.CategoryIds)
                                  select productCate;
 
                 _dbcontext.RemoveRange(deleteCate);
