@@ -118,12 +118,8 @@ namespace WDProject.Areas.Product.Controllers
 
         [HttpGet("/products/{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetProduct(int? Id)
+        public async Task<IActionResult> GetProduct(int Id)
         {
-            if (Id == null)
-            {
-                return NotFound(new { message = "không tìm thấy product" });
-            }
             var product = await _dbcontext.Products.Include(p => p.Details)
                                               .Include(p => p.Images)
                                               .Include(p => p.ProductsCategories).ThenInclude(pc => pc.Category)
@@ -228,13 +224,8 @@ namespace WDProject.Areas.Product.Controllers
 
         //Ổn rồi
         [HttpDelete("/products/{id}")]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (id == null)
-            {
-                return NotFound(new { message = "Không tìm thấy giày" });
-            }
-
             var product = await _dbcontext.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
             {
@@ -263,7 +254,7 @@ namespace WDProject.Areas.Product.Controllers
         }
 
         [HttpPut("/products/{id}")]
-        public async Task<IActionResult> Update(CreateProductsModel model, int id)
+        public async Task<IActionResult> Update([FromBody]CreateProductsModel model, int id)
         {
             if (!ModelState.IsValid)
             {

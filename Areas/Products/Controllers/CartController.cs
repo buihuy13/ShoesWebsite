@@ -28,6 +28,16 @@ namespace WDProject.Areas.Product.Controllers
         public IActionResult GetCartItems()
         {
             var items = _cartService.GetItems();
+            foreach (var item in items)
+            {
+                if (item.Product.Product != null && item.Product.Product.Images != null)
+                {
+                    foreach (var image in item.Product.Product.Images)
+                    {
+                        image.FileName = $"http://localhost:8080/contents/Products/{image.FileName}";
+                    }
+                }
+            }
             return Ok(new
             {
                 data = items
@@ -118,14 +128,10 @@ namespace WDProject.Areas.Product.Controllers
             return Ok(new { message = "update thành công" });
         }
 
-        [HttpPost("/cart/new")]
+        [HttpPost("/cart/new/{id}")]
         //id của user
-        public async Task<IActionResult> NewCart(string? id)
+        public async Task<IActionResult> NewCart(string id)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return NotFound(new { message = "Không tìm thấy user để lấy orders" });
-            }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
@@ -133,7 +139,7 @@ namespace WDProject.Areas.Product.Controllers
             }
             if (string.IsNullOrEmpty(user.HomeAddress) || string.IsNullOrEmpty(user.PhoneNumber))
             {
-                return BadRequest(new { message = "Điền đầy đủ thông tin cá nhân" });
+                return BadRequest(new { message = "Cần điền đầy đủ thông tin cá nhân" });
             }
             try
             {
@@ -150,20 +156,20 @@ namespace WDProject.Areas.Product.Controllers
                     ShippingAddress = user.HomeAddress,
                     TotalPrice = totalMoney,
                 };
-                await _dbContext.AddAsync(newOrder);
+                await _dbContext.Orders.AddAsync(newOrder);
 
                 foreach (var item in items)
                 {
-                    await _dbContext.AddAsync(new OrderDetails()
-                    {
-                        Order = newOrder,
-                        ProductDetails = item.Product,
-                        Quantity = item.Quantity
-                    });
                     if (item.Quantity > item.Product.StockQuantity)
                     {
                         return BadRequest(new { message = "Số lượng mua lớn hơn số lượng tồn kho" });
                     }
+                    await _dbContext.OrderDetails.AddAsync(new OrderDetails()
+                    {
+                        Order = newOrder,
+                        ProductDetailsId = item.Product.Id,
+                        Quantity = item.Quantity
+                    });
                     item.Product.StockQuantity -= item.Quantity;
                 }
                 _cartService.ClearCart();

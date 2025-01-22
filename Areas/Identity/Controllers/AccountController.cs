@@ -224,31 +224,31 @@ namespace WDProject.Areas.Identity.Controllers
         }
 
         [HttpGet("/users/{id}")]
-        public async Task<IActionResult> Details(string? id)
+        [Authorize]
+        public async Task<IActionResult> Details(string id)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                _logger.LogInformation("Không tìm thấy user");
-                return NotFound(new { message = "Không tìm thấy user" });
-            }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 _logger.LogInformation("Không tìm thấy user");
                 return NotFound(new { message = "Không tìm thấy user" });
             }
-            return Ok(new { data = new
+            return Ok(new
             {
-                HomeAddress = user.HomeAddress,
-                UserName = user.UserName,
-                TotalPurchase = user.TotalPurchase,
-                Phone = user.PhoneNumber,
-            }
+                data = new
+                {
+                    HomeAddress = user.HomeAddress,
+                    UserName = user.UserName,
+                    TotalPurchase = user.TotalPurchase,
+                    Phone = user.PhoneNumber,
+                    Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()
+                }
             });
         }
 
         [HttpDelete("/users/{id}")]
-        public async Task<IActionResult> DeleteConfirmed(string? id)
+        [Authorize]
+        public async Task<IActionResult> DeleteConfirmed(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -277,7 +277,7 @@ namespace WDProject.Areas.Identity.Controllers
         public async Task<IActionResult> GetUserByToken()
         {
             try
-            {
+            {   
                 var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
                 if (string.IsNullOrEmpty(token))
                 {

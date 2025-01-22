@@ -21,12 +21,8 @@ namespace WDProject.Areas.Product.Controllers
 
         //Danh sách order của 1 user với id là id của user đó
         [HttpGet("/orders/{id}")]
-        public async Task<IActionResult> GetOrders(string? id)
+        public async Task<IActionResult> GetOrders(string id)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return NotFound(new { message = "Không tìm thấy user để lấy orders" });
-            }
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
@@ -44,12 +40,8 @@ namespace WDProject.Areas.Product.Controllers
         }
         //Details của 1 order
         [HttpGet("/orders/details/{id}")]
-        public async Task<IActionResult> GetOrderDetails(int? id)
+        public async Task<IActionResult> GetOrderDetails(int id)
         {
-            if (id == null)
-            {
-                return NotFound(new { message = "Không tìm thấy order" });
-            }
             var order = await _dbContext.OrderDetails.Where(o => o.Order.Id == id).Include(o => o.ProductDetails)
                                                                             .ThenInclude(pd => pd.Product)
                                                                             .ThenInclude(p => p.Images)

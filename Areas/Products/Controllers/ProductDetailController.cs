@@ -34,6 +34,13 @@ namespace WDProject.Areas.Product.Controllers
 
             try
             {
+                if (product.Images != null)
+                {
+                    foreach (var image in product.Images)
+                    {
+                        image.FileName = $"http://localhost:8080/contents/Products/{image.FileName}";
+                    }
+                }
                 var response = new
                 {
                     Name = product.Name,
