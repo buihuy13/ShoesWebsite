@@ -92,13 +92,13 @@ namespace WDProject.Areas.Identity.Controllers
                 var token = Request.Headers["Refresh-Token"].FirstOrDefault()?.Split(" ").Last();
                 if (string.IsNullOrEmpty(token))
                 {
-                    return StatusCode(401, new { message = "refresh token null" });
+                    return BadRequest(new { message = "refresh token null" });
                 }
                 var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == token);
 
                 if (user == null)
                 {
-                    return Unauthorized(new { message = "Invalid refresh token" });
+                    return BadRequest(new { message = "Invalid refresh token" });
                 }
 
                 if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
