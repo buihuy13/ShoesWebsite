@@ -103,15 +103,11 @@ namespace WDProject.Areas.Product.Controllers
             }
         }
 
-        [HttpPut("/cart")]
-        public IActionResult UpdateCart([FromBody]CartModel cartModel)
+        [HttpPut("/cart/{id}")]
+        public IActionResult UpdateCart(int id, [FromBody]CartModel cartModel)
         {
-            if (cartModel.Id == null)
-            {
-                return NotFound(new { message = "Không được để null" });
-            }
             var items = _cartService.GetItems();
-            var item = items.FirstOrDefault(c => c.Product.Id == cartModel.Id);
+            var item = items.FirstOrDefault(c => c.Product.Id == id);
             if (item == null)
             {
                 return NotFound(new { message = "Không tìm thấy product trong cart" });
