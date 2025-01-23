@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Bogus.DataSets;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,24 +41,36 @@ namespace WDProject.Areas.Product.Controllers
         }
         //Details của 1 order
         [HttpGet("/orders/details/{id}")]
-        public async Task<IActionResult> GetOrderDetails(int id)
+        public IActionResult GetOrderDetails(int id)
         {
-            var order = await _dbContext.OrderDetails.Where(o => o.Order.Id == id).Include(o => o.ProductDetails)
+            var order = _dbContext.OrderDetails.Where(o => o.Order.Id == id).Include(o => o.ProductDetails)
                                                                             .ThenInclude(pd => pd.Product)
                                                                             .ThenInclude(p => p.Images)
-                                                                            .FirstOrDefaultAsync();
+                                                                            .Select(p => new
+                                                                            {
+                                                                                ProductDetailId = p.ProductDetails.Id,
+                                                                                Name = p.ProductDetails.Product.Name,
+                                                                                Description = p.ProductDetails.Product.Description,
+                                                                                Quantity = p.Quantity,
+                                                                                Size = p.ProductDetails.Size,
+                                                                                Brand = p.ProductDetails.Product.Brand,
+                                                                                Price = p.ProductDetails.Product.Price,
+                                                                                Images = p.ProductDetails.Product.Images,
+                                                                            });
             if (order == null)
             {
                 return NotFound(new { message = "Không tìm thấy order" });
             }
             try
             {
-                var images = order.ProductDetails.Product.Images;
-                if (images != null && images.Count() > 0)
+                foreach (var item in order)
                 {
-                    foreach (var image in images)
+                    if (item.Images != null && item.Images.Count() > 0)
                     {
-                        image.FileName = $"http://localhost:8080/contents/Products/{image.FileName}";
+                        foreach (var image in item.Images)
+                        {
+                            image.FileName = $"http://localhost:8080/contents/Products/{image.FileName}";
+                        }
                     }
                 }
                 return Ok(new { data = order });
