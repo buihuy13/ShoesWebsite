@@ -45,7 +45,7 @@ namespace WDProject.Areas.Product.Controllers
         }
 
         [HttpPost("/cart")]
-        public async Task<IActionResult> AddCartItems([FromBody]CartModel cartModel)
+        public async Task<IActionResult> AddCartItems([FromBody] CartModel cartModel)
         {
             if (cartModel.Id == null)
             {
@@ -104,7 +104,7 @@ namespace WDProject.Areas.Product.Controllers
         }
 
         [HttpPut("/cart/{id}")]
-        public IActionResult UpdateCart(int id, [FromBody]CartModel cartModel)
+        public IActionResult UpdateCart(int id, [FromBody] CartModel cartModel)
         {
             var items = _cartService.GetItems();
             var item = items.FirstOrDefault(c => c.Product.Id == id);
@@ -133,10 +133,7 @@ namespace WDProject.Areas.Product.Controllers
             {
                 return NotFound(new { message = "Không tìm thấy user để lấy orders" });
             }
-            if (string.IsNullOrEmpty(user.HomeAddress) || string.IsNullOrEmpty(user.PhoneNumber))
-            {
-                return BadRequest(new { message = "Cần điền đầy đủ thông tin cá nhân" });
-            }
+
             try
             {
                 var items = _cartService.GetItems();
@@ -149,7 +146,7 @@ namespace WDProject.Areas.Product.Controllers
                 {
                     UserId = id,
                     OrderDate = DateTime.Now,
-                    ShippingAddress = user.HomeAddress,
+                    ShippingAddress = "N/A",
                     TotalPrice = totalMoney,
                 };
                 await _dbContext.Orders.AddAsync(newOrder);
@@ -174,7 +171,7 @@ namespace WDProject.Areas.Product.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new {message = ex.Message});
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
