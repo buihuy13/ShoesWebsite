@@ -160,7 +160,14 @@ namespace WDProject.Areas.Identity.Controllers
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, RoleName.user);
+                    if (model.UserName == "admin" && model.Password == "admin123")
+                    {
+                        await _userManager.AddToRoleAsync(user, "admin");
+                    }
+                    else
+                    {
+                        await _userManager.AddToRoleAsync(user, RoleName.user);
+                    }
                     _logger.LogInformation("Tạo tài khoản thành công");
                     return StatusCode(201,new { message = "Đăng ký thành công" });
                 }

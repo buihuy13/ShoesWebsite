@@ -7,7 +7,8 @@ namespace WDProject.Models.Database
 {
     public class MyDbContext : IdentityDbContext
     {
-        public DbSet<Categories> Categories { get; set; }   
+        public DbSet<Categories> Categories { get; set; } 
+        public DbSet<ProductImage> ProductImage { get; set; }
         public DbSet<Order> Orders { get; set; } 
         public DbSet<OrderDetails> OrderDetails { get; set; }   
         public DbSet<ProductDetails> ProductDetails { get; set; }
