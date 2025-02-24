@@ -162,7 +162,7 @@ namespace WDProject.Areas.Identity.Controllers
                 {
                     if (model.UserName == "admin" && model.Password == "admin123")
                     {
-                        await _userManager.AddToRoleAsync(user, "admin");
+                        await _userManager.AddToRoleAsync(user, RoleName.admin);
                     }
                     else
                     {
