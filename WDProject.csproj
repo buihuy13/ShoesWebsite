@@ -4,17 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>d8c08732-1cff-4959-8325-b7ace7358395</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\Identity\Data\" />
-    <Folder Include="Controllers\Identity\Views\Account\CSS\" />
-    <Folder Include="Controllers\Identity\Views\Account\JS\" />
-    <Folder Include="Controllers\Identity\Views\Admin\CSS\" />
-    <Folder Include="Controllers\Identity\Views\Admin\JS\" />
-    <Folder Include="Controllers\Products\Data\" />
-    <Folder Include="Controllers\Products\Views\" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.1" />
@@ -37,6 +30,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.jQuery.Unobtrusive.Ajax" Version="3.2.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
     <PackageReference Include="MySql.Data" Version="9.1.0" />
     <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.8" />

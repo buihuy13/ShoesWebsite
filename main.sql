@@ -1,4 +1,4 @@
-create database shoes;
+create database if not EXISTS shoes;
 use shoes;
 
 CREATE TABLE IF NOT EXISTS `__EFMigrationsHistory` (
@@ -2338,30 +2338,30 @@ INSERT INTO `Roles`(`Id`,`Name`) VALUES
 ('UserId','User'),
 ('AdminId','Admin');
 
-update roles
-set NormalizedName = "ADMIN"
-where Id = "AdminId";
+UPDATE Roles
+SET NormalizedName = "ADMIN"
+WHERE Id = "AdminId";
 
-update roles
-set NormalizedName = "USER"
-where Id = "UserId";
+UPDATE Roles
+SET NormalizedName = "USER"
+WHERE Id = "UserId";
 
-INSERT INTO users 
+INSERT INTO Users 
 (Id, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnabled, AccessFailedCount, Discriminator, TotalPurchase) 
 VALUES 
 ('admin', 'admin', 'ADMIN', 'admin@gmail.com', 'ADMIN@GMAIL.COM', 1, 
 'AQAAAAIAAYagAAAAEHO+IV2ynP5Z+08GhlBWack5DbY6l8Ym62XfpBXIlcp4ZrQLy8Ek7qnrl1C3LlSpNw==',
 'RandomSecurityStamp', UUID(), 0, 0, 1, 0, 'User',0.0);
 
-INSERT INTO users 
+INSERT INTO Users 
 (Id, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnabled, AccessFailedCount, Discriminator, TotalPurchase) 
 VALUES 
 ('user', 'user', 'USER', 'user@gmail.com', 'USER@GMAIL.COM', 1, 
 'AQAAAAIAAYagAAAAEOccNF9Y6rqlmVMMOKaLLsIucpvnNuHnppWTSMtyuYW03L6X0Y5Wi38JBnDAuxW5hw==',
 'RandomSecurityStamp', UUID(), 0, 0, 1, 0, 'User', 0.0);
 
-insert into userroles (UserId, RoleId)
-values
+INSERT INTO UserRoles (UserId, RoleId)
+VALUES
 ('admin', 'AdminId'),
 ('user', 'UserId');
 
